@@ -1,0 +1,3410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>Talking Head Anime from a Single Image</title>
+
+    <!-- Bootstrap -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/theme.css" rel="stylesheet">
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+    <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]},
+      TeX: { equationNumbers: {autoNumber: "AMS"} } 
+    });
+    </script>
+    <script type="text/javascript"
+            src="MathJax/MathJax.js?config=TeX-AMS_HTML-full">
+    </script>
+
+    <script type="text/javascript" src="js/jquery-3.4.1.min.js"></script>    
+    <script type="text/javascript" src="js/bigfoot.min.js"></script>    
+
+    <link rel="stylesheet" type="text/css" href="css/bigfoot-default.css">    
+
+</head>
+<body>
+<div class="container" style="max-width: 640px;">
+    <span style="visibility: hidden;">
+      \(
+      \def\sc#1{\dosc#1\csod}
+      \def\dosc#1#2\csod{{\rm #1{\small #2}}}
+      \)
+    </span>
+    
+    <h1 align="center">&nbsp;</h1>
+    <h1 align="center">Talking Head Anime<br>from a Single Image</h1>
+    <p align="center">
+    <a href="http://pkhungurn.github.io">Pramook Khungurn</a>    
+    </p>
+    <h1 align="center">&nbsp;</h1>
+</div>
+
+<div align="center">
+<video id="eyecatcher" autoplay muted playsinline loop>
+    <source src="data/eyecatcher.webm" type="video/webm">
+</video>
+</div>
+
+<div class="container" style="max-width: 640px;">
+    <h1>&nbsp;</h1>
+    <blockquote>
+        <p><b>Abstract.</b> Fascinated by <a href="https://en.wikipedia.org/wiki/Virtual_YouTuber">virtual YouTubers</a>, I put together a deep neural network system that makes becoming one much easier. More specifically, the network takes as input an image of an anime character's face and a desired pose, and it outputs another image of the same character in the given pose. What it can do is shown in the video below:</p>
+
+        <p align="center">
+            <iframe width="560" height="315" src="https://www.youtube.com/embed/kMQCERkTdO0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </p> 
+
+        <p>I also connected the system to a face tracker. This allows the character to mimic my face movements:</p>
+
+        <p align="center">
+            <iframe width="560" height="315" src="https://www.youtube.com/embed/T1Gp-RxFZwU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            <br/>
+            <a href="https://www.youtube.com/watch?v=w_O6F1aPGS4">[日本語版]</a> <a href="https://www.youtube.com/watch?v=TdjFZDIacPQ">[เวอร์ชันภาษาไทย]</a>
+        </p>
+
+        <p>I can also transfer face movements from existing videos:</p>
+
+        <p align="center">
+            <iframe width="560" height="315" src="https://www.youtube.com/embed/FioRJ6x_RbI" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </p>
+    </blockquote>
+
+    <h1>&nbsp;</h1>
+    <h2>1 &nbsp; Introduction</h2>
+
+    <p>In the past two years, I have been really into <b>virtual YouTubers</b> (VTubers). For the uninitiated, these are anime characters, acted and voiced by real people, that contribute video contents and/or do live streams in YouTube. Perhaps the easiest way to get what they are is to see one in action. Below is <a href="https://www.youtube.com/channel/UCdn5BQ06XqgXoAxIhbqw5Rg">Shirakami Fubuki</a>, one of my favorite VTubers:</p>
+
+    <p align="center"><script type="application/javascript" src="https://embed.nicovideo.jp/watch/sm35216836/script?w=640&h=360"></script><noscript><a href="https://www.nicovideo.jp/watch/sm35216836">キラメキラリを歌う白上フブキ</a></noscript><br/></p>
+
+    <p>VTubers form a new cohort of entertainers, and they are gaining traction in Japan. According to <a href="https://www.bbc.com/worklife/article/20181002-the-virtual-vloggers-taking-over-youtube">this article by BBC</a>, a new industry is being developed around them, with <a href="http://gree.jp/">a company</a> planning to invest millions of dollars.</p>
+
+    <p>On the other hand, I have also been fascinated by recent advances in deep learning, especially when it comes to anime-related stuffs. In 2017, a team of dedicated researchers have successfully trained a generative adversarial network (GAN) to generate images of anime characters of very good quality <a href="#fn_jin_2017_0">[Jin et al. 2017]</a>. Recently, Gwern, a freelance writer, released <a href="https://www.gwern.net/Danbooru2018">the largest corpus of anime images</a> and also managed to <a href="https://www.gwern.net/Faces#">train another GAN</a> that generated anime characters that are <a href="https://twitter.com/gwern/status/1095131651246575616">eye-poppingly beautiful</a>. Sizigi Studios, a San Francisco game developer, opened <a href="http://waifulabs.com">WaifuLabs</a>, a website that allows you to customize a GAN-generated female character and buy merchandise featuring her.</p>
+
+    <div class="footnotes"><ul><li class="footnote" id="fn_jin_2017_0"><p align="left">
+    Yanghua Jin, Jiakai Zhang, Minjun Li, Yingtao Tian, Huachun Zhu, and Zhihao Fang.
+    <b>Towards the Automatic Anime Characters Creation with Generative Adversarial Networks.</b>
+    Machine Learning for Creativity and Design, NIPS 2017 Workshop, 2017.
+    <a href="https://arxiv.org/abs/1708.05509">[arXiv]</a>
+    </p></li></ul></div>
+
+    <blockquote class="twitter-tweet" align="center" data-conversation="none"><p lang="en" dir="ltr">The StyleGAN anime face interpolations are solid:<br><br>- <a href="https://t.co/JtzWaQ1rLT">https://t.co/JtzWaQ1rLT</a><br>- <a href="https://t.co/dl5AqXYqlc">https://t.co/dl5AqXYqlc</a><br>- <a href="https://t.co/FaldMdAbyQ">https://t.co/FaldMdAbyQ</a> <a href="https://t.co/7T7hoCDXMg">pic.twitter.com/7T7hoCDXMg</a></p>&mdash; 𝔊𝔴𝔢𝔯𝔫 (@gwern) <a href="https://twitter.com/gwern/status/1095131651246575616?ref_src=twsrc%5Etfw">February 12, 2019</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+    <p>Everything seems to point to the future where artificial intelligence is an important tool for anime creation, and I want to take part in realizing it. In particular, how can I make creating anime easier with deep learning? It seems that the lowest hanging fruit is creating VTuber contents. So, since early 2019, I embarked on the quest to answer the following question: <b>Can I use deep learning to make becoming a VTuber easier?</b></p>
+
+    <h2>2 &nbsp; What am I trying to do?</h2>
+
+    <p>So how do you become a VTuber to begin with? You need a character model whose movement can be controlled. One approach is to create a full 3D model of the character, and it is taken by many famous VTubers such as <a href="https://www.youtube.com/channel/UC4YaOt1yT-ZeyB0OmxHgolA">Kizuna Ai</a>, <a href="https://www.youtube.com/user/bittranslate">Mirai Akari</a>, and <a href="https://www.youtube.com/channel/UCLhUvJ_wO9hOvv_yYENu4fQ">Dennou Shoujo Shiro</a>. However, crafting a beautiful 3D model is expensive because it requires multiple types of talents: a great character designer is a must, and a highly skilled 3D modeler is also needed. It is rare for a person to be both, not to mention that creating a character is off limit for someone with no art skills like me. Of course, you can always throw money at the problem, but a simple Google search reveals that the asking price for <a href="https://3d-modely.com/menu/virtualyoutuber-mmd">a commission is around 500,000 yen</a> ($\approx$ 5,000 dollars).</p>
+
+    <p>Instead of 3D models, you can create 2D ones. A 2D model is a collection of movable images arranged into layers. Most VTubers use this type of models because it is much cheaper to create: <a href="https://coconala.com/categories/641">commissioning seems to cost around 30,000 yen</a> ($\approx$ 300 dollars). Still, 2D modeling requires extra work on top of designing and drawing the character. The body needs to be divided into multiple movable parts. The modeler then has to assemble them together using specialized software such as <a href="https://www.live2d.com/">Live2D</a>. Specifying the parts' movements is also time consuming.</p>
+
+    <p>However, the possible movements of most 2D VTubers are rather simple. They can open and close their mouths and eyes, lower and raise their eyebrows, rotate their faces by some small angles, and rock their bodies left and right. They rarely rotate their bodies or move their arms and legs. The reason is that it is much harder to create such movements from a fixed collection of 2D images.</p>
+
+    <p>Given that the movements of 2D VTubers are simple and limited, <b>can we automatically generate them on the fly instead of creating movable 2D models first?</b> Being able to do so would make it much easier to become a VTuber. I can just go ahead and commission a drawing, which probably takes no more than 20,000 yen. Better yet, I can use a GAN to generate a character at virtually no cost! This would be a boon to not only someone who cannot draw like me, but also a benefit to artists: they can draw and get the character to move immediately without modeling. I also see immediate applications in game production. It would be super simple to make all characters in <a href="  https://en.wikipedia.org/wiki/Visual_novel">visual novels</a> move as they go through the dialogue.</p>
+
+    <h2>3 &nbsp; Overview</h2>
+
+    <p>Now that the goal is established, let's get a little more specific about the project. The problem I'm trying to solve is this: given an image of an anime character's face and a "pose," generate another image of the same character such that its face is changed according to the pose. Here, a pose is a collection of numbers that specifies the character's facial expression and head orientation. In particular, my pose has 6 numbers, corresponding to the sliders in <a href="https://www.youtube.com/watch?v=kMQCERkTdO0">the first video of the abstract</a>. I will discuss the specifics of inputs and outputs in the <a href="#problem-spec">Problem Specification</a> section.</p>
+
+    <p align="center">
+        <table align="center">
+            <tr>
+                <td align="center">
+                    <a href="data/input-output-diagram.png"><img src="data/input-output-diagram.png" width="600"></a>
+                </td>
+            </tr>
+            <tr>
+                <td align="center">
+                    <b>Figure 3A.</b> The input and output of the system.
+                    <a href="#fn_kizuna_ai_attribution" rel="footnote">[*]</a>
+                    <div class="footnotes"><ul><li class="footnote" id="fn_kizuna_ai_attribution"><p align="left">
+                    The character is <a href="https://www.youtube.com/channel/UC4YaOt1yT-ZeyB0OmxHgolA/videos">Kizuna AI</a> (© Kizuna AI), and I used the 3D model downloaded from the <a href="http://kizunaai.com/download-page/">official web page</a> to render this image and other similar ones.    
+                    </p></li></ul></div>
+                </td>                
+            </tr>
+        </table>        
+    </p>
+
+    <p>As you may have guessed, I will solve the problem with deep learning. This requires me to answer the follow two questions:</p>
+
+    <ol>
+        <li>What data am I going to train the network with?</li>
+        <li>What network architecture am I going to use, and how in particular would I train the network?</li>
+    </ol>
+
+    <p>It turns out that the main challenge is the first question. I need a dataset that contains face images annotated with their poses. EmotioNet is a large dataset of human faces with the desired type of annotations <a href="#fn_emotionet" rel="footnote">[Benitez-Quiroz et al. 2016]</a>. However, there is no such dataset for anime characters as far as I know.</p>
+
+    <div class="footnotes"><ul><li class="footnote" id="fn_emotionet"><p align="left">
+    Carlos Fabian Benitez-Quiroz, Ramprakash Srinivasan, Qianli Feng, Yan Wang, and Aleix M. Martínez.
+    <b>EmotioNet Challenge: Recognition of facial expressions of emotion in the wild.</b>
+    CVPR 2016. <a href="http://cbcsl.ece.ohio-state.edu/EmotionNetChallenge/index.html">[Project]</a> <a href="https://arxiv.org/abs/1703.01210">[arXiv]</a>
+    </p></li></ul></div>
+
+    <p>I therefore generated a new dataset specifically for the project. I took advantage of the fact that there are ten of thousands of downloadable 3D models of anime characters, created for a 3D animation software called <a href="https://en.wikipedia.org/wiki/MikuMikuDance">MikuMikuDance</a>. I downloaded about 8,000 models and used them to render anime faces under random poses. I will discuss the steps to prepare the data in the <a href="#dataset">Dataset</a> section.</p>
+
+    <p>I designed the network according to how a 3D character model is animated. I decompose the process into two steps. The first changes the facial expression; i.e., controlling how much the eyes and the mouth are opened. The second rotates the face. I use a separate network for each step, making the second network takes as input the output of the first. Let us call the first network the <i>face morpher</i>, and the second the <i>face rotator</i>.</p>
+
+    <p align="center">
+        <a href="data/overview-two-step-process.png"><img src="data/overview-two-step-process.png" width="600"></a>
+        <br/>
+        <b>Figure 3B.</b> The system decomposed into a two-step process.
+    </p>
+
+    <p>For the face morpher, I use the generator architecture employed by Pumarola et al. in their ECCV 2018 paper <a href="#fn_pumarola_2018_0" rel="footnote">[Pumarola et al. 2018]</a>. The network changes facial expression by producing another image that represents changes to the original image. The change image is combined with the original using an alpha mask <a href="#fn_alpha_mask">[*]</a>, also produced by the network itself. I found that their architecture works excellently for changing small parts of the image: closing eyes and mouths in my case.</p>
+
+    <div class="footnotes">
+        <ul>
+            <li class="footnote" id="fn_pumarola_2018_0">
+                <p align="left">
+                    Albert Pumarola, Antonio Agudo, Aleix M. Martínez, Alberto Sanfeliu, and Francesc Moreno-Noguer.
+                    <b>GANimation: Anatomically-Aware Facial Animation from a Single Image.</b>
+                    ECCV 2018. <a href="https://www.albertpumarola.com/research/GANimation/">[Project]</a> <a href="https://arxiv.org/abs/1807.09251">[arXiv]</a>
+                </p>
+            </li>
+        </ul>
+        <ul>
+            <li class="footnote" id="fn_alpha_mask">
+                <p align="left">
+                    An alpha mask is map that tells, for every pixel in an image, how "transparent" the pixel is. It is used when compositing an image on top of another, much like layering transparent slides. See the Wikipedia article on <a href="https://en.wikipedia.org/wiki/Alpha_compositing">alpha compositing</a> for more details.
+                </p>
+            </li>
+        </ul>
+    </div>    
+
+    <p>
+        The face rotator is much more complicated. I use two algorithms, implemented in a single network, to rotate the face, thereby producing two outputs. The  algorithms are:
+    </p>
+
+    <ul>
+        <li>Pumarola et al.'s algorithm. This is the one just used to modify facial expression, but now I tell the network to rotate the face.</li>
+        <li>Zhou et al.'s view synthesis algorithm <a href="#fn_zhou_2016_0" rel="footnote">[Zhou et al. 2016]</a>. Their goal is to rotate a 3D object in an image. They do so by having a neural network compute an <b>appearance flow</b>: a map that tells, for each pixel in the output, which pixel in the input to copy color from.</li>
+    </ul>
+
+    <div class="footnotes"><ul><li id="fn_zhou_2016_0"><p align="left">
+    Tinghui Zhou, Shubham Tulsiani, Weilun Sun, Jitendra Malik,  and Alexei A. Efros.
+    <b>View Synthesis by Appearance Flow.</b>
+    ECCV 2016.
+    <a href="https://arxiv.org/abs/1605.03557">[arXiv]</a>
+    </p></li></ul></div>
+
+    <p>
+    Appearance flow produces sharp results that preserve the original texture, but it is not good at hallucinating occluded parts that become visible after rotation. On the other hand, Pumarola et al's architecture produces blurry results but can hallucinate disoccluded <a href="#fn_disoccluded">[*]</a> parts as it is trained to change the original image's pixels without copying from existing ones. (See <a href="#figure6c">Figure 6C</a> for a visual demonstration of the pros and the cons of the algorithms.) To combine both approaches' advantages, I train another network to blend the two outputs together through an alpha mask. The network also outputs a "retouch" image, which is blended with the combined image with yet another alpha mask.
+    </p>
+
+    <div class="footnotes">
+        <ul>
+            <li class="footnote" id="fn_disoccluded">
+                <p align="left">
+                    According to <a href="https://en.wiktionary.org/wiki/disocclude">Wiktionary</a>, to disocclude means "to cause to be no longer occluded." The site also says it is a dentistry and computer graphics term. Interestingly, I did not encounter the term even once in my six-year stint as a graphics Ph.D. student. However, some vision papers (e.g., <a href="https://arxiv.org/abs/1703.02921">this one</a>) use it.
+                </p>
+            </li>
+        </ul>
+    </div>
+
+    <p align="center">
+        <table align="center">
+            <tr>
+                <td align="center">
+                    <a href="data/overview-three-steps.png"><img src="data/overview-three-steps.png" width="600"></a>
+                </td>
+            </tr>
+            <tr>
+                <td align="center">
+                    <b>Figure 3C.</b> 
+                    The system with the face rotator shown in more details.
+                </td>
+            </tr>
+        </table>
+    </p>
+
+    <p>I will discuss the architectures of all the networks and how they were trained in details in the <a href="#networks">Networks</a> section.</p>
+
+    <h2>4 &nbsp; Problem Specification</h2><a name="problem-spec"></a>
+
+    <p>The input to the system consists of an image of an anime character and a desired pose vector. The image is of size 256$\times$256, has RGBA format, and must have a transparent background. More specifically, pixels that do not belong to the character must have the RGBA value of (0,0,0,0), and those that do must have non-zero alpha values. The character's head must be looking straight in the direction perpendicular to the image plane. The head must be contained in the center 128$\times$128 box, and the eyes and the mouth must be wide open. (The network can handle images with eyes and mouth closed as well. However, in such a case, it cannot open them because there's not enough information on what the opened eyes and mouth look like.) In 3D character animation terms, the input is the <i>rest pose shape</i> to be deformed. See a <a href="https://skinning.org/">course on 3D character animation</a> if you are curious.</p>
+
+    <p align="center">
+        <table align="center">
+            <tr>
+                <td align="center">
+                    <img src="data/image-spec.png" /><br/>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <b>Figure 4A.</b> Input image specification.
+                </td>
+            </tr>
+        </table>
+    </p>
+
+    <p>As said earlier, the character's face configuration is controlled by a "pose." In my case, it is a 6-dimensional vector. Three components control the facial features and have values in the closed interval $[0,1]$.</p>
+
+    <ul>
+        <li>
+            Two components control the opening of the eyes; one for the left eye and the other for the right. The value of $0$ means the eye is fully open, and $1$ means the eye is fully closed.
+
+            <p align="center">
+                <video width=256 height=256 muted autoplay playsinline loop>
+                    <source src="data/pose-spec/left-eye.webm" type="video/webm">
+                </video>
+
+                <video width=256 height=256 muted autoplay playsinline loop>
+                    <source src="data/pose-spec/right-eye.webm" type="video/webm">
+                </video>
+            </p>            
+        </li>
+        <li>
+            One component controls the opening of the mouth. This time, however, $0$ means the mouth is fully closed, and $1$ means the mouth is fully open. The contradicting semantics of the eye and the mouth parameters stem from the semantics of <a href="https://en.wikipedia.org/wiki/Morph_target_animation">morph</a> weights of the 3D models.
+
+            <p align="center">
+                <video width=256 height=256 muted autoplay playsinline loop>
+                    <source src="data/pose-spec/lips.webm" type="video/webm">
+                </video>                
+            </p>
+        </li>
+    </ul>
+
+    <p>
+        The three other components control how the head is rotated. In 3D animation terms, the head is controlled by two "joints," connected by a "bone." The <i>neck root</i> joint is at where the neck is connected to the body, and the <i>neck tip</i> joint is at where the neck is connected to the head. In the skeleton of the character, the tip is a child of the root. So, a 3D transformation applied to the root would also affect the tip, but not the other way around.
+    </p>
+
+    <p align="center">
+        <img src="data/joints.png" width="378" height="378">
+        <br/>
+        <b>Figure 4B.</b> Two joints that control the character's head.
+    </p>
+    <p>
+        The three components of the pose vector have values in the interval $[-1,1]$.
+    </p>
+
+    <ul>
+        <li>
+            One component controls the rotation around the $z$-axis of the neck root joint. Here, I use a coordinate system where the $y$-axis points up, the $x$-axis points to the left side of the character, and the $z$-axis points to the front. (See Figure 4B.) So, the component controls how much the neck is tilted sideway. I limit the rotation angle to the range $[-15^\circ, 15^\circ]$. The value of $-1$ corresponds to $-15^\circ$, and the value of $1$ corresponds to $15^\circ$.
+
+            <p align="center">
+                <video width=256 height=256 muted autoplay playsinline loop>
+                    <source src="data/pose-spec/neck-z.webm" type="video/webm">
+                </video>                
+            </p>
+        </li>
+
+        <li>
+            One component controls the rotation around the $x$-axis of the neck tip join. Physically, it indicates how much the head is tilted up or down. Again, we map the component value's range of $[-1,1]$ to the rotation angle's range of $[-15^\circ, 15^\circ]$. A positive value means the head is tilted up, a negative value means it is tiled down, and the value of $0$ means the head is facing in the direction parallel to the $z$-axis.
+
+            <p align="center">
+                <video width=256 height=256 muted autoplay playsinline loop>
+                    <source src="data/pose-spec/head-x.webm" type="video/webm">
+                </video>
+            </p>
+        </li>
+
+        <li>
+            The last component has the same angular range as the previous one, but it controls the rotation around the $y$-axis of the neck tip join. In other words, it control the horizontal direction of the face.
+
+            <p align="center">
+                <video width=256 height=256 muted autoplay playsinline loop>
+                    <source src="data/pose-spec/head-y.webm" type="video/webm">
+                </video>
+            </p>
+        </li>
+    </ul>
+
+    <p>I omitted many types of movement, including those of eyebrows, irises, and the upper body. I do so to make the problem smaller and easier to solve so that I can finish the system and demonstrate that it works faster. While the system is limited right now, adding more types of movement is not conceptually different from what I do here. I leave this as future work.</p>
+
+    <p>To recap, the input consists of an image of a character's face and a 6-dimensional pose vector. The output is another image of the face that is posed accordingly.</p>
+
+    <h2>5 &nbsp; Dataset</h2><a name="dataset"></a>    
+
+    <p>
+        I want to animate drawn characters, so it would be the most advantageous to train the network with drawings. However, I created a training dataset by rendering 3D character models. While 3D renderings are not the same as drawings, they are much easier to work with because 3D models are controllable. I can come up with any pose, apply it to a model, and render an image showing exactly that pose. Moreover, a 3D model can be used to generate hundreds of training images, so I only need to collect several thousand models. If I were to use drawings, I would have to collect hundreds of thousands of them and annotate each one with the pose of the character. Annotating hundreds of thousands images is much harder than processing several thousands 3D models.
+    </p>
+
+    <p>
+        I use models created for a 3D animation software called <a href="https://en.wikipedia.org/wiki/MikuMikuDance">MikuMikuDance</a> (MMD). The main reason is that there are tens of thousands of downloadable models of anime characters. I am also quite familiar with the file format because I used MMD models to generate training data for one of <a href="http://www.cs.cornell.edu/~pramook/papers/manpu2016.pdf">my previous research papers</a>. Over the years, I have developed a library to manipulate and render the models, and it has allowed me to automate much of the data generation process.
+    </p>
+
+    <p>
+        To create a training dataset, I downloaded around 13,000 MMD models from websites such as <a href="https://3d.nicovideo.jp/">Niconi Solid</a> and <a href="https://bowlroll.net/">BowlRoll</a>. I also found models by following links from <a href="https://w.atwiki.jp/vpvpwiki/pages/65.html">VPVP wiki</a>, <a href="https://blog.psocafe.com/">みさきる！</a>, and <a href="https://dic.nicovideo.jp/a/mmd%E3%83%A6%E3%83%BC%E3%82%B6%E3%83%BC%E3%83%A2%E3%83%87%E3%83%AB">Nico Nico Pedia</a>. Downloading alone took about two months.
+    </p>
+
+    <p>
+        Not all models are usable. Some of them are not even character models, and I had to discard models that my library could not handle. To reduce repetitive training data, I also subjectively removed models whose appearances, I thought, were too close to those of other models. After all elimination, I was left with around 8,000 models. Some of them are shown in the video below.
+    </p>
+
+    <p align="center">
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/6-zpzdH6j30" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </p>
+
+    <h3>5.1 &nbsp; Data Annotation</h3>
+
+    <p>
+        The raw model data are not enough to generate training data. In particular, there are two problems.
+    </p>
+
+    <p>
+        The first problem is that I did not know exactly where each model's head was. I need to know this because the input specification requires that the head be contained in the middle 128 $\times$128 box of the input image. So, I created a tool that allowed me to annotate each model with the $y$-position of the bottom and the top of the head. The bottom corresponds to the tip of the chin, but the top does not have a precise definition. I mostly set the top so that the whole skull and the flat portion of hair that covers it are included in the range, arbitrarily excluding hair that pointed upward. If the character wears a hat, I simply guessed the location of the head's top. Fortunately, the positions do not have to be precise for a neural network to work. You can see the tool in action in the video below:
+    </p>
+
+    <p align="center">
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/hTn3ErAMaDQ" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </p>
+
+    <p>
+        The second problem is that I did not know how to exactly control each model's eyes. Facial expressions of MMD models are implemented with "morphs" (aka blend shapes). A morph typically corresponds a facial feature being deformed in a particular way. For example, for most models, there is a morph corresponding to closing both eyes and another corresponding to opening the mouth as if to say "ah."
+    </p>
+
+    <p>
+        To generate the training data, I need to know the names of three morphs: one that closes the left eye, one that closes the right, and one that opens the mouth. The last one is named "あ" in almost all models, so I did not have a problem with it. The situation is more difficult with the eye-closing morphs. Different modelers name them differently, and one or both of them might be missing from some models.
+    </p>
+
+    <p>
+        I created a tool that allowed me to cycle through the eye controlling morphs and mark ones that have the right semantics. You can see a session of me using the tool in the following video.
+    </p>
+
+    <p align="center">
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/3M7OukBVpNo" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </p>
+
+    <p>
+        You can see in the video that I collected 6 morphs instead of 2. The reason is that MMD models generally come with two types of winks. <i>Normal winks</i> have eyelids curved downward, and <i>smile winks</i> have eyelids curved upward, resulting in a happy look. Moreover, for each type of wink, there can be three different morphs: one that closes the right eye, one that closes the left, and one that closes both. At the point of data annotation, I was not sure which type of wink and morph to use, so I decided to collect them all. In the end, I decided to use only the normal winks because more models have them. While it seems that morphs that close both eyes are superfluous, some models do not have any morphs that close only one eye.
+    </p>
+
+    <p>
+        Annotating the models, including developing tools to do so, took about 4 months. It was the most time consuming part of the project.
+    </p>
+
+    <h3>5.2 &nbsp; Pose Sampling</h3>
+
+    <p>
+        Another important part of the training data is the pose, which I need to specify one for every training example. I generated poses by sampling each component of the pose vector independently. For the eye and mouth controlling parameters, I sample them uniformly from the $[0,1]$ interval. For the head joint parameters, I sampled from a probability distribution whose density grows linearly from the center of the range (i.e., $0$) to the extreme values (i.e., $-1$ and $1$). The density is depicted in the figure below:
+    </p>
+
+    <p align="center">
+        <img src="data/joint-parameter-distribution.png">
+        <br/>
+        <b>Figure 5A.</b> Probability distribution for sampling the head joint parameters.
+    </p>
+
+    <p>
+        I chose this distribution to increase the frequency of hard training examples: when some head joint parameters are far from $0$, there would be a large difference between the head configuration and that of the rest pose. I believe that forcing the network to solve challenging problems from the get-go would make it perform better in general.
+    </p>
+
+    <h3>5.3 &nbsp; Rendering</h3>
+
+    <p>
+        To generated a training image, I decide on a model and a pose. I rendered the posed model using an <a href="https://en.wikipedia.org/wiki/Orthographic_projection">orthographic projection</a> so that the $y$-positions of the top and bottom of the head (obtained through manual annotation in Section 5.1) corresponds to the middle 128-pixel vertical strip of the image. The reason for using the orthographic projection rather than the <a href="https://en.wikipedia.org/wiki/3D_projection#Perspective_projection">perspective projection</a> is that drawings, especially of VTubers, do not seem to have foreshortening effects.
+    </p>
+
+    <p>
+        Rendering a 3D model requires specifying the light scattering properties of the model's surface. MMD generally uses <a href="https://en.wikipedia.org/wiki/Cel_shading">toon shading</a>, but I used a more standard <a href="https://en.wikipedia.org/wiki/Phong_reflection_model">Phong reflection model</a> because I was too lazy to implement toon shading. Depending on the model data, the resulting training images might look more 3D-like than typical drawings. However, in the end, the system still worked well on drawings despite being trained on 3D-like images.
+    </p>
+
+    <p>
+    <table align="center">
+        <tr>
+            <td align="center">
+                <img src="data/momo-mmd.png" width="200" height="200">
+            </td>
+            <td align="center">
+                <img src="data/momo-mylib.png" width="200" height="200">
+            </td>
+        </tr>
+        <tr>            
+            <td align="center">(a)</td>
+            <td align="center">(b)</td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <b>Figure 5B.</b> Comparison between (a) a rendering by the MikuMikuDance software, and (b) a rendering by my library. MMD produces a flat appearance that is more similar to a drawing. You can notice that the nose is much more noticeable in (b) than in (a). Nonetheless, because the images are very similar overall, the network trained with (b) would still generalize well to drawings. <a href="#fn_aduchi_momo_attribution" rel="footnote">[*]</a>
+                <div class="foonotes"><ul><li class="footnote" id="fn_aduchi_momo_attribution"><p align="left">
+                The character is <a href="https://www.youtube.com/channel/UC6TfqY40Xt1Y0J-N18c85qQ">Aduchi Momo</a>. The 3D model was created by <a href="https://3d.nicovideo.jp/users/18092313">弐形</a> and is available <a href="https://3d.nicovideo.jp/works/td37632">here</a>.</p>
+                </li></ul></div>
+            </td>
+        </tr>
+    </table>    
+    </p>
+
+    <p>
+        Rendering also requires specifying the lighting in the scene. I used two light sources. First is a directional white light of the magnitude $0.5$ that points straight in the $-z$ direction. The light's direction was chosen to minimize shadow in the rendering. Second is a white ambient light source of magnitude $0.5$.
+    </p>
+    
+    <p>
+        Another detail of the data generation process is that each training example consists of three images. The first is that of the character in the rest pose. The second only contains changes to facial features. The third adds face rotation to the second. I do this because I have separate networks for manipulating facial features and rotating the face, and they need different training data.  Note that, since the image with the rest pose does not depend on the sampled pose, we only need to render it once for each model.
+    </p>
+
+    <table align="center">
+        <tr>
+            <td align="center">
+                <img src="data/training-rest.png" width="200" height="200">
+            </td>
+            <td align="center">
+                <img src="data/training-morphed.png" width="200" height="200">
+            </td>
+            <td align="center">
+                <img src="data/training-posed.png" width="200" height="200">
+            </td>
+        </tr>
+        <tr>
+            <td align="center">(a)</td>
+            <td align="center">(b)</td>
+            <td align="center">(c)</td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                <b>Figure 5C.</b> For each training example, I rendered three images: (a) one with the character in the rest pose, (b) one with only facial expression changes, and (c) one with both facial expression changes and face rotation. Training the face morpher uses (a) and (b), but training the face rotator uses (b) and (c).
+            </td>
+        </tr>
+    </table>
+    <p></p>
+
+    <h3>5.4 &nbsp; Datasets</h3>
+
+    <p>
+        I divided the models into three subsets so that I can use them to generate the training, validation, and test datasets. While downloading the models, I organized them into folders according to the source materials. For example, models of <a href="http://www.fate-go.jp">Fate/Grand Order</a> characters and those of <a href="http://www.dmm.com/netgame/feature/kancolle.html">Kantai Collection</a> characters would go into different folders. I used models of <a href="https://nijisanji.ichikara.co.jp/member/">VTubers from Nijisanji</a> to generate the validation set and models of other VTubers to generate the test set. The training set was created from characters from anime, manga, and video games. Because the origins for the characters are different, there are no overlaps between the three datasets. 
+    </p>
+
+    <p>
+        The numerical breakdown of the three datasets are as follows:
+    </p>
+
+    <style>
+      .table-striped th:not(:first-child){
+        text-align: right;
+      }
+    </style>
+
+    <p>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th scope="col">&nbsp;</th>
+                    <th scope="col">Training Set</th>
+                    <th scope="col">Validation Set</th>
+                    <th scope="col">Test Set</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th scope="row">Models</th>
+                    <td align="right">
+                        7,881
+                    </td>
+                    <td align="right">
+                        79
+                    </td>
+                    <td align="right">
+                        72
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row">Sampled Poses</th>
+                    <td align="right">500,000</td>
+                    <td align="right">10,000</td>
+                    <td align="right">10,000</td>
+                </tr>
+                <tr>
+                    <th scope="row">Rest Pose Images</th>
+                    <td align="right">7,881</td>
+                    <td align="right">79</td>
+                    <td align="right">72</td>
+                </tr>
+                <tr>
+                    <th scope="row">Expression Changed Images</th>
+                    <td align="right">500,000</td>
+                    <td align="right">10,000</td>
+                    <td align="right">10,000</td>
+                </tr>
+                <tr>
+                    <th scope="row">Fully Posed Images</th>
+                    <td align="right">500,000</td>
+                    <td align="right">10,000</td>
+                    <td align="right">10,000</td>
+                </tr>
+                <tr>
+                    <th scope="row">Total Number of Images</th>
+                    <td align="right">1,007,881</td>
+                    <td align="right">20,079</td>
+                    <td align="right">20,072</td>
+                </tr>    
+            </tbody>
+        </table>
+    </p>    
+
+    <p>
+        Data generation was fully automated. The whole process took about 16 hours.
+    </p>
+
+    <h2>6 &nbsp; Networks</h2><a name="networks"></a>
+
+    <p>
+        As discussed in the Overview section, my neural network system consists of many subnetworks. I'll now describe them in details.
+    </p>
+
+    <h3>6.1 &nbsp; Face Morpher</h3>
+
+    <p>
+        The first step to pose a character's face is to modify its facial features. More specifically, we need to close its eyes and mouth.
+    </p>
+
+    <p>
+        In their paper, Pumarola et al. describes a network that can modify human facial features according to the given <a href="https://en.wikipedia.org/wiki/Facial_Action_Coding_System">Action Units</a> (AU), which represent movements of facial muscles <a href="#fn_pumarola_2018_1" rel="footnote">[Pumarola et al. 2018]</a>. As the AU is a very general coding system, their network can do much more than closing eyes and mouth. As a result, I thought it would be effective at the task we have at hand. I tried it out, and it did not disappoint.
+    </p>
+
+    <div class="footnotes"><ul><li class="footnote" id="fn_pumarola_2018_1"><p align="left">
+    Albert Pumarola, Antonio Agudo, Aleix M. Martínez, Alberto Sanfeliu, and Francesc Moreno-Noguer.
+    <b>GANimation: Anatomically-Aware Facial Animation from a Single Image.</b>
+    ECCV 2018. <a href="https://www.albertpumarola.com/research/GANimation/">[Project]</a> <a href="https://arxiv.org/abs/1807.09251">[arXiv]</a>
+    </p></li></ul></div>
+
+    <p>
+        However, I did not use everything from the paper because my problem is much simpler than theirs. In particular, their training data do not come in pairs of faces of the same person with different facial expressions. So, they need to use a GAN with a cycle consistency loss to perform unsupervised learning. My data, however, are paired (i.e., I have Images (a) and (b) in Figure 5C for every training example), so I can do vanilla supervised learning. As a result, I only need their generator network.
+    </p>
+
+    <p>
+        For completeness, I shall describe Pumarola et al.'s generator in details. You can see an overview of the architecture in Figure 6A.
+    </p>
+
+    <p align="center">
+        <table align="center">
+            <tr>
+                <td align="center">
+                    <a href="data/face-morpher.png"><img src="data/face-morpher.png" width="600"></a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <b>Figure 6A.</b> The architecture of the face morpher. This is a reproduction of Figure 3 in Pumarola et al.'s paper.
+                </td>
+            </tr>
+        </table>
+    </p>
+
+    <p>
+        The network modifies facial expression by producing a <i>change image</i>, which is combined with the original input image through an <i>alpha mask</i> . (Pumarola et al. call it an <i>attention mask</i>, but I use a more common term here.) To do so, the input image and the pose is fed to an encoder-decoder network which will produce a 64-dimensional feature vector for each pixel of the input image. This image of feature vectors is then processed with two separate trains of a 2D convolutional unit and a suitable nonlinearity to produce the alpha mask and the change image. The detailed specification of the network is given in <a href="#face-morpher-spec">Appendix A.1</a>.
+    </p>
+
+    <p>
+        Pumarola et al. trained their network with a rather complex loss function. To my surprise, a simple L1 pixel difference loss sufficed for my problem. Mathematically, the loss function is given by:
+        \begin{align*}
+        \mathcal{L}_{\mathrm{fm}} 
+        &= E_{ (I_r,\rho,I_e) \sim p_{data}}  [ \| I_e - G_{fm}(I_r, \rho) \|_1 ].
+        \end{align*}
+        Here:    
+    </p>
+    <ul>
+        <li>The subscript $fm$ stands for "face morpher".</li>
+        <li>$p_{data}$ denotes for the probability distribution of the training data. A sample is a tuple $(I_r, \rho, I_e)$ where $I_r$ is the character image in <b>r</b>est pose (Figure 5Ca), $\rho$ is the pose vector, and $I_e$ is the character image with facial <b>e</b>xpression (Figure 5Cb).</li>
+        <li>$G_{fm}$ denotes the face morpher network.</li>
+    </ul>
+
+    <p>I optimized the network with the Adam algorithm using the same setting as Pumarola et al.'s: learning rate of $1^{-4}$, $\beta_1 = 0.5$, $\beta_2 = 0.999$, and batch size of 25. The network was trained for 6 epochs (3,000,000 examples), taking about 2 days with my GeForce GTX 1080 Ti GPU.</p>
+
+
+    <h3>6.2 &nbsp; Face Rotator</h3>
+
+    <p>The face rotator consists of two subnetworks. The <i>two-algorithm rotator</i> rotates the character's face with two different algorithms, each with its own strength and weakness. To combine their strength, the <i>combiner</i> takes the two output images, blends them together with an alpha mask, and also retouches the image to improve quality.</p>    
+
+    <h4>6.2.1 &nbsp; Two-Algorithm Rotator</h4>
+
+    <p>
+        The architecture is depicted in Figure 6B and is specified in details in <a href="#two-algo-face-rotator">Appendix A.2</a>.
+    </p>
+
+    <p align="center">
+        <a href="data/two-algo-face-rotator.png"><img src="data/two-algo-face-rotator.png" width="600"></a>
+        <br/>
+        <b>Figure 6B.</b> The architecture of the two-algorithm face morpher.
+    </p>
+
+    <p>
+        The network can be thought of as an extension to Pumarola et al.'s generator: it has all the units of the generator but now contains a new output pathway. The old one is just Pumarola et al.'s network being asked to rotate face instead of closing eyes and mouth.
+    </p>
+
+    <p>
+        The new pathway produces output using an approach for rotating objects described in Zhou et al's paper <a href="#fn_zhou_2016_1" rel="footnote">[Zhou et al. 2018]</a>. The idea is that rotating an object, especially by a small angle, largely involves moving pixels in the input image to different locations. Zhou et al. thus propose computing the <b>appearance flow</b>: a map that tells where in the input image each pixel of the output image should be copied from. This map and the original image are then passed to a pixel sampling unit <a href="#fn_jadeberg_2015_0">[Jaderberg et al. 2015]</a> to generate the output image. In my architecture, the appearance flow is computed simply by passing the output of the encoder-decoder network to a new convolution unit.
+    </p>
+
+    <div class="footnotes"><ul><li class="footnote" id="fn_jadeberg_2015_0"><p align="left">
+    Max Jaderberg, Karen Simonyan, Andrew Zisserman, Koray Kavukcuoglu.
+    <b>Spatial Transformer Networks.</b>
+    NIPS 2015.
+    <a href="http:s//arxiv.org/abs/1506.02025">[arXiv]</a>
+    </p></li></ul></div>
+
+    <div class="footnotes"><ul><li id="fn_zhou_2016_1"><p align="left">
+    Tinghui Zhou, Shubham Tulsiani, Weilun Sun, Jitendra Malik,  and Alexei A. Efros.
+    <b>View Synthesis by Appearance Flow.</b>
+    ECCV 2016.
+    <a href="https://arxiv.org/abs/1605.03557">[arXiv]</a>
+    </p></li></ul></div>
+
+    <p>
+        I trained the network using two different losses. The first is just the L1 pixel difference loss:
+        \begin{align*} 
+            \mathcal{L}_{fr}^{L1}
+            &= \sum_{k = 1}^2 E_{(I_e, \rho, I_p) \sim p_{data}} 
+            \Big[ 
+            \| I_p - I_k \|_1
+            \Big].
+            \label{L-fr-L1}
+        \end{align*}
+    </p>
+
+    <ul>
+        <li>The subscript $fr$ stands for face rotator, and the superscript $L1$ stands for the L1 loss.</li>
+        
+        <li>$p_{data}$ again denotes the probability distribution of the training data. A sample is now $(I_e, \rho, I_p)$ where $I_e$ is the image with facial expression change (Figure 5Cb), $\rho$ the pose, and $I_p$ the fully posed image (Figure 5Cc).</li>
+        
+        <li>
+        The index $k$ goes through the 2 output pathways, and $I_k$ denotes the output of the $k$th pathway:
+        \begin{align*}
+        I_k = G_k(I_e, \rho).
+        \end{align*}
+        Here, $G_1$ denotes the Pumarola et al.'s pathway, and $G_2$ denotes Zhou et al.'s.
+        </li>
+    </ul>
+
+
+    <p>        
+        The second loss is a sum between the L1 pixel difference loss and Johnson et al's perceptual feature reconstruction loss <a href="#fn_johnson_2016_0" rel="footnote">[2016]</a>:
+        \begin{align*}
+            \mathcal{L}_{fr}^{P}
+            &= \sum_{k = 1}^2 E_{(I_e, \rho, I_p) \sim p_{data}} 
+            \bigg[ 
+            \| I_p - I_k \|_1
+            + \sum_{j=1}^3 \lambda_j^{fr} \Phi_j(I_p, I_k)
+            \bigg]
+            \label{L-fr-P}.
+        \end{align*}
+    </p>
+
+    <div class="footnotes"><ul><li class="footnote" id="fn_johnson_2016_0"><p align="left">
+    Justin Johnson, Alexandre Alahi, Li Fei-Fei.
+    <b>Perceptual Losses for Real-Time Style Transfer and Super-Resolution.</b>
+    ECCV 2016.
+    <a href="https://cs.stanford.edu/people/jcjohns/eccv16/">[Project]</a>
+    <a href="https://arxiv.org/abs/1603.08155">[arXiv]</a>
+    </p></li></ul></div>
+
+    <ul>
+        <li>
+            The superscript $P$ stands for "perceptual." 
+        </li>
+
+        <li>
+        $\Phi_1$, $\Phi_2$, and $\Phi_3$ denote the Johnson et al.'s feature reconstruction loss defined using the <tt>relu1_2</tt>, <tt>relu2_2</tt>, <tt>relu3_3</tt> layers of VGG16 <a href="#fn_simonyan_2015_0">[Simonyan et al. 2015]</a>, respectively. It is defined as:
+        \begin{align*}
+        \Phi_j(I_p, I_k)
+        = 
+        \| \phi_j(I_p^{rgb}) - \phi_j(I_k^{rgb}) \|_1
+        + \| \phi_j(I_p^{aaa}) - \phi_j(I_k^{aaa}) \|_1
+        \end{align*}
+        where $\phi_j(\cdot)$ denotes the feature tensor outputted by the $j$th used layer. The loss is defined as a sum of two L1 norms instead of one because of a difference in the input format: VGG16 takes a 3-channel image as input while all images in this article have 4 channels. To solve the format disagreement, I create two 3-channel images from each 4-channel image $I$. The first image, denoted by $I^{rgb}$, is formed by taking only the RGB channels of $I$. The second image, denoted by $I^{aaa}$, is a 3-channel grayscale image formed by copying the A channel of $I$ to the three output channels.
+        <div class="footnotes"><ul><li class="footnote" id="fn_simonyan_2015_0"><p align="left">
+        Karen Simonyan and Andrew Zisserman.
+        <b>Very Deep Convolutional Networks for Large-Scale Image Recognition.</b>
+        ICRL 2015.
+        <a href="https://www.robots.ox.ac.uk/~vgg/research/very_deep/">[Project]</a>
+        <a href="https://arxiv.org/abs/1409.1556">[arXiv]</a>
+        </p></li></ul></div>        
+        </li>
+        
+        <li>
+        $\lambda^{fr}_j$ is the weight for the $j$th feature reconstruction loss. I define it to be:
+        $$
+        \lambda^{fr}_j = \frac{1}{5} \cdot \frac{4 \times 256 \times 256}{C_j H_j W_j}
+        $$
+        where $C_j$, $H_j$, and $W_j$ is the number of channels, height, and width of $\phi_j(\cdot)$. In effect, the feature reconstruction loss is rescaled so that it "matches" the size of the processed images before being multiplied by $1/5$, a constant I picked arbitrarily.
+        </li>  
+    </ul>
+
+    <p>
+        Again, I trained the network with Adam, using the same hyper parameters as those of the face morpher, and for 6 epochs (3,000,000 examples). When using the L1 loss, I set the batch size to 25, and training again took about 2 days. However, because evaluating the feature reconstruction loss requires much more memory, I had to reduced the batch size to 8 when training with the perceptual loss. Training took 6 days in this case.
+    </p>
+
+    <h4>6.2.2 &nbsp; Combiner</h4>
+
+    <p>
+        It is instructive to see the outputs of the two-algorithm rotator to see that one of them alone does not suffice.
+    </p>
+
+        <table align="center">
+            <tr>
+                <td align="center" width="270">
+                    <img src="data/sora-rotated-pumarola.png" width="256"><a name="figure6c"></a>
+                </td>
+                <td align="center" width="270">
+                    <img src="data/sora-rotated-appearance-flow.png" width="256">
+                </td>
+            </tr>
+            <tr>
+                <td align="center">
+                    (a) Pumarola et al.'s
+                </td>
+                <td align="center">
+                    (b) Zhou et al.'s
+                </td>
+            </tr>
+            <tr>
+                <td align="center">
+                    <img src="data/sora-rotated-combined.png" width="256">
+                </td>
+                <td align="center">
+                    <img src="data/sora-rotated-ground-truth.png" width="256">
+                </td>
+            </tr>
+            <tr>
+                <td align="center">
+                    (c) Combined
+                </td>
+                <td align="center">
+                    (d) Ground truth
+                </td>
+            </tr>            
+        </table>
+    <p align="center">
+        <b>Figure 6C.</b> Using various algorithms to rotate a character's neck to the right by $15^\circ$. 
+        <a href="#fn_tokino_sora_attribution" rel="footnote">[*]</a>
+        <div class="footnotes"><ul><li class="footnote" id="fn_tokino_sora_attribution"><p align="left">
+        The character is <a href="https://www.youtube.com/channel/UCp6993wxpyDPHUpavwDFqgg">Tokino Sora</a> (© Tokino Sora Ch.), and I used the official model download from <a href="https://3d.nicovideo.jp/works/td38103">Niconi 3D</a>.        
+        </p></li></ul></div>
+    </p>
+
+    <p>
+        In Figure 6C, a character's neck is rotated, and, as a result, part of her long hair that was occluded by the body becomes visible. We can see that Pumarola et al.'s algorithm produced a blurry face. I surmise that this is due to requiring the network to produce all the new pixels from a compressed feature encoding, which can lose the high frequency details of the original image. Similar behavior from other encoder-decoder architectures are observed in previous works; for example, those by Tatarchenko et al. <a href="#fn_tatarchenko_2016_0">[2016]</a> and Park et al. 
+        <a href="#fn_park_2017_0" rel="footnote">[2017]</a>. Zhou et al., on the other hand, reuse pixels from the input image and so is capable of producing sharp results.
+    </p>
+
+    <div class="footnotes">
+        <ul>
+            <li class="footnote" id="fn_tatarchenko_2016_0">
+                <p align="left">
+                    Maxim Tatarchenko, Alexey Dosovitskiy, Thomas Brox.
+                    <b>Multi-view 3D Models from Single Images with a Convolutional Network.</b>
+                    ECCV 16.
+                    <a href="https://arxiv.org/abs/1511.06702">[arXiv]</a>
+                </p>
+            </li>
+            <li class="footnote" id="fn_park_2017_0">
+                <p align="left">
+                    Eunbyung Park, Jimei Yang, Ersin Yumer, Duygu Ceylan, and Alexander C. Berg.
+                    <b>Transformation-Grounded Image Generation Network for Novel 3D View Synthesis.</b>
+                    CVPR 2017. <a href="https://arxiv.org/abs/1703.02921">[arXiv]</a>
+                </p>
+            </li>            
+        </ul>
+    </div>
+
+    <p>
+        Nevertheless, it is difficult to reconstruct disoccluded parts by copying existing pixels, especially when the right location to copy from is far away. We see in Figure 6Cb that Zhou et al.'s algorithm used the arm pixels to reconstruct the disoccluded hair. On the other hand, Pumarola et al.'s hair has a more natural color.
+    </p>
+
+    <p>
+        By combining the outputs of the two algorithms, we can get a much better result: relocated visible pixels would remain sharp, and pixels of disoccluded parts would have natural colors. The combiner network is depicted in Figure 6D and specified in details in <a href="#combiner">Appendix A.3</a>.
+    </p>
+
+    <p align="center">
+        <a href="data/combiner.png"><img src="data/combiner.png" width="600"></a>
+        <br/>
+        <b>Figure 6D.</b> The architecture of the combiner.
+    </p>
+
+    <p>
+        I use U-Net <a href="#fn_ronneberger_2015_0">[Ronneberger et al. 2015]</a> as the main body of the combiner in order to facilitate per pixel operations. Its output is then transformed into two alpha masks and a change image. The first alpha mask is used to combine the two input images. The second alpha mask and the change image are then combined with the output of the previous step to produce the final output. This last step "retouches" the combined image to improve its quality.
+    </p>
+
+    <div class="footnotes">
+        <ul>
+            <li class="footnote" id="fn_ronneberger_2015_0">
+                <p align="left">
+                Olaf Ronneberger, Philipp Fischer, and Thomas Brox.
+                <b>U-Net: Convolutional Networks for Biomedical Image Segmentation.</b>
+                Medical Image Computing and Computer-Assisted Intervention (MICCAI), 2015.
+                <a href="https://lmb.informatik.uni-freiburg.de/people/ronneber/u-net/">[Project]</a>
+                <a href="https://arxiv.org/abs/1511.06702">[arXiv]</a>
+                </p>
+            </li>
+        </ul>
+    </div>
+
+    <p>
+        The combiner was trained separately from the two-algorithm rotator to reduce memory usage. I ran the latter on all training examples to generate the former's input. Again, I experimented with two loss functions. The first is the L1 loss:
+        \begin{align*}
+        \mathcal{L}_c^{L1} = E_{(I_e, \rho, I_p) \sim p_{data}} \Big[ \| I_p - I_c \|_1 \Big].
+        \end{align*}
+    </p>
+    <ul>
+        <li>The subscript $c$ stands for "combiner."</li>
+        <li>$I_c$ stands for the output of the combiner. More precisely:
+        \begin{align*}
+        I_c = G_c\Big(G_1(I_e, \rho), G_2(I_e, \rho), \rho\Big)
+        \end{align*}
+        where $G_c$ denotes the combiner itself.
+        </li>        
+    </ul>
+
+    <p>
+        The second is the perceptual loss:
+        \begin{align*}
+        \mathcal{L}_c^{P} = E_{(I_e, \rho, I_p) \sim p_{data}} \bigg[ \| I_p - I_c \|_1 + \sum_{j=1}^3 \lambda_j^{c} \Phi_j(I_p, I_c) \bigg].
+        \end{align*}
+    </p>
+    <ul>
+        <li>
+        $\lambda_j^c$ is the weight of of the perceptual loss relative to the L1 pixel loss. I set it to:
+        \begin{align*}
+        \lambda_j^c = \frac{1}{25} \cdot \frac{4 \times 256 \times 256}{C_j H_j W_j}.
+        \end{align*}
+        The weight is lower for the combiner as I chose it so that the two losses would have roughly the same magnitude when evaluated on the training and validation sets. 
+        </li>
+    </ul>
+
+    <p>
+        The training procedure was similar to that of the face morpher. However, for expediency, the duration was 3 epochs instead of 6. The batch size for the L1 loss was 20, and training finished in a day. For the perceptual loss, the batch size was 12, and training lasted 2 days.
+    </p>
+
+    <h2>7 &nbsp; Evaluation</h2><a name="results"></a>
+
+    <h3>7.1 &nbsp; Network Configurations</h3>
+
+    <p>
+        The combinations of networks and loss functions in the last section give rise to different network configurations that can perform the whole posing task. The face can be rotated in three ways: using only Pumarola et al.'s path way, using only Zhou et al.'s pathway, or using both and the combiner. Moreover, each of the subnetwork of the face rotator can be trained using either the L1 or the perceptual loss. All possible configurations are given in the table below:
+    </p>
+
+    <table class="table table-bordered" align="center">        
+        <tbody>
+            <tr>
+                <td rowspan="2" align="center"><b>Config</b></td>
+                <td colspan="3" align="center"><b>How faces are rotated</b></td>
+                <td colspan="2" align="center"><b>Loss function for <br> the two-algorithm face rotator</b></td>
+                <td colspan="2" align="center"><b>Loss function for the combiner</b></td>
+            </tr>
+            <tr>
+                <td align="center"><b>Pumarola<br>et al.'s<br>pathway</b></td>
+                <td align="center"><b>Zhou<br>et al.'s<br>pathway</b></td>                
+                <td align="center"><b>Full face rotator</b></td>
+                <td align="center"><b>L1</b></td>
+                <td align="center"><b>Per<br>cep<br>tual</b></td>
+                <td align="center"><b>L1</b></td>
+                <td align="center"><b>Per<br>cep<br>tual</b></td>
+            </tr>
+            <tr>
+                <td>PU-L1</td>
+                <td align="center">✓</td>
+                <td align="center"></td>
+                <td align="center"></td>
+                <td align="center">✓</td>
+                <td align="center"></td>
+                <td align="center"></td>
+                <td align="center"></td>
+            </tr>
+            <tr>
+                <td>PU-P</td>
+                <td align="center">✓</td>
+                <td align="center"></td>
+                <td align="center"></td>
+                <td align="center"></td>
+                <td align="center">✓</td>
+                <td align="center"></td>
+                <td align="center"></td>
+            </tr>
+            <tr>
+                <td>ZH-L1</td>
+                <td align="center"></td>
+                <td align="center">✓</td>
+                <td align="center"></td>
+                <td align="center">✓</td>
+                <td align="center"></td>
+                <td align="center"></td>
+                <td align="center"></td>
+            </tr>
+            <tr>
+                <td>ZH-P</td>
+                <td align="center"></td>
+                <td align="center">✓</td>
+                <td align="center"></td>
+                <td align="center"></td>
+                <td align="center">✓</td>
+                <td align="center"></td>
+                <td align="center"></td>
+            </tr>
+            <tr>
+                <td>FU-L1-L1</td>
+                <td align="center"></td>
+                <td align="center"></td>
+                <td align="center">✓</td>
+                <td align="center">✓</td>
+                <td align="center"></td>
+                <td align="center">✓</td>
+                <td align="center"></td>
+            </tr>
+            <tr>
+                <td>FU-L1-P</td>
+                <td align="center"></td>
+                <td align="center"></td>
+                <td align="center">✓</td>
+                <td align="center">✓</td>
+                <td align="center"></td>
+                <td align="center"></td>
+                <td align="center">✓</td>
+            </tr>
+            <tr>
+                <td>FU-P-L1</td>
+                <td align="center"></td>
+                <td align="center"></td>
+                <td align="center">✓</td>
+                <td align="center"></td>
+                <td align="center">✓</td>
+                <td align="center">✓</td>
+                <td align="center"></td>
+            </tr>
+            <tr>
+                <td>FU-P-P</td>
+                <td align="center"></td>
+                <td align="center"></td>
+                <td align="center">✓</td>
+                <td align="center"></td>
+                <td align="center">✓</td>
+                <td align="center"></td>
+                <td align="center">✓</td>
+            </tr>
+        </tbody>
+    </table>
+    <p align="center"><b>Table 7A.</b> The network configurations to be evaluated.</p>
+    
+    <p>
+        Note that, for all the configurations above, only the face rotator is changed, and the face morpher remained fixed.
+    </p>
+
+    <h3>7.1 &nbsp; Quantitative Evaluation</h3>
+
+    <p>
+        Performance is evaluated using two metrics. First is the average per-pixel root mean square error (RMSE) between the network's output and the ground truth image. Second is the average structural similarity index (SSIM) <a href="#fn_wang_2014_0">[Wang et al. 2004]</a>. The scores are computed using the 10,000 examples in the test dataset.
+    </p>
+
+    <div class="footnotes">
+        <ul>
+            <li class="footnote" id="fn_wang_2014_0">
+                <p align="left">
+                    Zhou Wang, Alan Conrad Bovik, Hamid Rahim Sheikh, and Eero P. Simoncelli.
+                    <b>Image Quality Assessment: From Error Visibility to Structural Similarity.</b>
+                    IEEE Transactions on Image Processing, Vol. 13, No 4, April 2004. <a href="https://www.cns.nyu.edu/pub/eero/wang03-reprint.pdf">[Paper]</a>
+                </p>
+            </li>
+        </ul>
+    </div>
+    
+    <!--
+    <table class="table table-bordered">
+        <tbody>
+            <tr>
+                <td rowspan="2"><b>Config</b></th>
+                <td colspan="3" align="center"><b>How faces are rotated</b></td>
+                <td colspan="2" align="center"><b>Loss function for <br> the two-algorithm face rotator</b></td>
+                <td colspan="2" align="center"><b>Loss function for <br> the combiner</b></td>
+                <td rowspan="2"><b>RMSE (lower is better)</b></th>
+                <td rowspan="2"><b>SSIM (higher is better)</b></th>
+            </tr>
+            <tr>
+                <td align="center"><b>Pumarola et al.'s pathway</b></td>
+                <td align="center"><b>Zhou<br>et al.'s<br>pathway</b></td>                
+                <td align="center"><b>Full face rotator</b></td>
+                <td align="center"><b>L1</b></td>
+                <td align="center"><b>Per<br>cep<br>tual</b></td>
+                <td align="center"><b>L1</b></td>
+                <td align="center"><b>Per<br>cep<br>tual</b></td>
+            </tr>
+            <tr>
+                <td>PU-L1</td>
+                <td align="center">✓</td>
+                <td align="center"></td>
+                <td align="center"></td>
+                <td align="center">✓</td>
+                <td align="center"></td>
+                <td align="center"></td>
+                <td align="center"></td>
+                <td align="right"><tt>0.010311</tt></td>
+                <td align="right"><tt>0.837049</tt></td>
+            </tr>
+            <tr>
+                <td>PU-P</td>
+                <td align="center">✓</td>
+                <td align="center"></td>
+                <td align="center"></td>
+                <td align="center"></td>
+                <td align="center">✓</td>
+                <td align="center"></td>
+                <td align="center"></td>
+                <td align="right"><tt>0.009831</tt></td>
+                <td align="right"><tt>0.837744</tt></td>
+            </tr>
+            <tr>
+                <td>ZH-L1</td>
+                <td align="center"></td>
+                <td align="center">✓</td>
+                <td align="center"></td>
+                <td align="center">✓</td>
+                <td align="center"></td>
+                <td align="center"></td>
+                <td align="center"></td>
+                <td align="right"><tt>0.010657</tt></td>
+                <td align="right"><tt>0.841081</tt></td>
+            </tr>
+            <tr>
+                <td>ZH-P</td>
+                <td align="center"></td>
+                <td align="center">✓</td>
+                <td align="center"></td>
+                <td align="center"></td>
+                <td align="center">✓</td>
+                <td align="center"></td>
+                <td align="center"></td>
+                <td align="right"><tt>0.010326</tt></td>
+                <td align="right"><tt>0.844812</tt></td>
+            </tr>
+            <tr>
+                <td>FU-L1-L1</td>
+                <td align="center"></td>
+                <td align="center"></td>
+                <td align="center">✓</td>
+                <td align="center">✓</td>
+                <td align="center"></td>
+                <td align="center">✓</td>
+                <td align="center"></td>
+                <td align="right"><tt>0.010080</tt></td>
+                <td align="right"><tt>0.851760</tt></td>
+            </tr>
+            <tr>
+                <td>FU-L1-P</td>
+                <td align="center"></td>
+                <td align="center"></td>
+                <td align="center">✓</td>
+                <td align="center">✓</td>
+                <td align="center"></td>
+                <td align="center"></td>
+                <td align="center">✓</td>
+                <td align="right"><tt>0.009982</tt></td>
+                <td align="right"><tt>0.850675</tt></td>
+            </tr>
+            <tr>
+                <td>FU-P-L1</td>
+                <td align="center"></td>
+                <td align="center"></td>
+                <td align="center">✓</td>
+                <td align="center"></td>
+                <td align="center">✓</td>
+                <td align="center">✓</td>
+                <td align="center"></td>
+                <td align="right"><tt>0.009870</tt></td>
+                <td align="right"><b><tt>0.854050</tt></b></td>
+            </tr>
+            <tr>
+                <td>FU-P-P</td>
+                <td align="center"></td>
+                <td align="center"></td>
+                <td align="center">✓</td>
+                <td align="center"></td>
+                <td align="center">✓</td>
+                <td align="center"></td>
+                <td align="center">✓</td>
+                <td align="right"><b><tt>0.009789</tt></b></td>
+                <td align="right"><tt>0.852795</tt></td>
+            </tr>
+        </tbody>
+    </table>
+    -->
+
+    <table class="table table-bordered">
+        <tbody>
+            <tr>
+                <td><b>Config</b></th>
+                <td align="center"><b>How faces are rotated</b></td>
+                <td align="center"><b>Loss function for <br> the two-algorithm face rotator</b></td>
+                <td align="center"><b>Loss function for <br> the combiner</b></td>
+                <td><b>RMSE (lower is better)</b></th>
+                <td><b>SSIM (higher is better)</b></th>
+            </tr>            
+            <tr>
+                <td>PU-L1</td>
+                <td>Pumarola et al.'s pathway</td>
+                <td>L1</td>
+                <td>N/A</td>
+                <td align="right"><tt>0.010311</tt></td>
+                <td align="right"><tt>0.837049</tt></td>
+            </tr>
+            <tr>
+                <td>PU-P</td>
+                <td>Pumarola et al.'s pathway</td>
+                <td>Perceptual</td>
+                <td>N/A</td>
+                <td align="right"><tt>0.009831</tt></td>
+                <td align="right"><tt>0.837744</tt></td>
+            </tr>
+            <tr>
+                <td>ZH-L1</td>
+                <td>Zhou et al.'s pathway</td>
+                <td>L1</td>
+                <td>N/A</td>
+                <td align="right"><tt>0.010657</tt></td>
+                <td align="right"><tt>0.841081</tt></td>
+            </tr>
+            <tr>
+                <td>ZH-P</td>
+                <td>Zhou et al.'s pathway</td>
+                <td>Perceptual</td>
+                <td>N/A</td>
+                <td align="right"><tt>0.010326</tt></td>
+                <td align="right"><tt>0.844812</tt></td>
+            </tr>
+            <tr>
+                <td>FU-L1-L1</td>
+                <td>Full face rotator</td>
+                <td>L1</td>
+                <td>L1</td>
+                <td align="right"><tt>0.010080</tt></td>
+                <td align="right"><tt>0.851760</tt></td>
+            </tr>
+            <tr>
+                <td>FU-L1-P</td>
+                <td>Full face rotator</td>
+                <td>L1</td>
+                <td>Perceptual</td>
+                <td align="right"><tt>0.009982</tt></td>
+                <td align="right"><tt>0.850675</tt></td>
+            </tr>
+            <tr>
+                <td>FU-P-L1</td>
+                <td>Full face rotator</td>
+                <td>Perceptual</td>
+                <td>L1</td>
+                <td align="right"><tt>0.009870</tt></td>
+                <td align="right"><b><tt>0.854050</tt></b></td>
+            </tr>
+            <tr>
+                <td>FU-P-P</td>
+                <td>Full face rotator</td>
+                <td>Perceptual</td>
+                <td>Perceptual</td>
+                <td align="right"><b><tt>0.009789</tt></b></td>
+                <td align="right"><tt>0.852795</tt></td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <p align="center"><b>Table 7B.</b> RMSE and SSIM scores of the 8 network configurations.</p>
+
+    <p>We see that using one face rotation pathway alone generally performed worse than combining two pathways. One notable exception is that PU-P performed better than all networks except FU-P-P with regards to MRSE. However, for SSIM, combining always led to better performance.</p>
+
+    <p>Another trend is that using the perceptual loss generally improved performance according to both metrics. However, the best performing configuration with respect to the SSIM metric is FU-P-L1 instead of FU-P-P.</p>
+
+    <p>It seems that the best configurations are FU-P-L1 and FU-P-P, both of which achieved first and second best scores for both metrics. We thus need to examine the generated images in order to decide which one is better.</p>
+
+    <h3>7.2 &nbsp; Qualitative Evaluation</h3>
+
+    <p>I rendered videos of 8 selected characters in the test dataset using the 8 network configurations and also my MMD model renderer. <a href="#test-videos-viewer">Appendix B.1</a> has an interactive viewer that allows you to see the videos rendered by two configurations side by side. Below, I show videos generated by one of the configurations. </p>
+
+    <p id="testVideos"></p>
+    <p><b>Figure 7C.</b> Videos of the selected 8 characters rendered by the FU-P-P network configuration. <a href="#fn_video_comparison_attribution" rel="footnote">[a]</a>
+    </p>
+
+    <div class="footnotes"><ul><li class="footnote" id="fn_video_comparison_attribution">
+        <p align="left">
+        The character models used are as follows:
+        <ul style="text-align: left;">
+            <li><a href="https://www.youtube.com/channel/UCOefINa2_BmpuX4BbHjdk9A">Yozakura Tama</a> (© Appland, Inc.) model is available <a href="https://3d.nicovideo.jp/works/td49915">here</a>.</li>
+            <li><a href="https://www.youtube.com/channel/UCiGcHHHT3kBB1IGOrv7f3qQ">Kongou Iroha</a> (© Appland, Inc.) model is available <a href="https://3d.nicovideo.jp/works/td49918">here</a>.</li>
+            <li><a href="https://www.youtube.com/channel/UCmM5LprTu6-mSlIiRNkiXYg">Kiso Azuki</a> (© Appland, Inc.) model is available <a href="https://3d.nicovideo.jp/works/td49925">here</a>.</li>
+            <li><a href="https://www.youtube.com/channel/UCyb-cllCkMREr9de-hoiDrg">Yamato Iori</a> (© Appland, Inc.) model is available <a href="https://3d.nicovideo.jp/works/td49906">here</a>.</li>
+            <li><a href="https://www.youtube.com/channel/UCp6993wxpyDPHUpavwDFqgg">Tokino Sora</a> (© Tokino Sora Ch.) model is available <a href="https://3d.nicovideo.jp/works/td38103">here</a>.</li>
+            <li><a href="https://www.youtube.com/channel/UCzrw4K7D9Ti3FP8WMTVPImg">Weatheroid Airi</a> (© Weathernews Inc.) model is available <a href="https://weathernews.jp/weatheroid/model/">here</a>.</li>
+            <li><a href="https://www.youtube.com/c/HALchannel">Shibuya Haru</a> model is available <a href="https://bowlroll.net/file/200394">here</a>.</li>
+            <li><a href="https://www.youtube.com/channel/UCom8rCUQZP98SIXJzMwjrxw">Akiyama Rentarou</a> (© ひま食堂) model is available <a href="https://3d.nicovideo.jp/works/td56961">here</a>.</li>
+        </ul>
+        </p>
+    </li></ul>
+    </div>
+
+    <p>Let us compare the network configurations in terms of visual quality. PU-L1 and PU-P produce results that are too blurry and of low quality. This shows that, while Pumarola et al.'s architecture is effective at modifying small parts of a face, it does not work well when the modification covers a large part of the output image. We can also observe that PU-P yields sharper images thanks to the perceptual loss, as has been observed by Park et al. <a href="#fn_park_2017_1" rel="footnote">[2017]</a>. However, they have checkerboard artifacts that are a byproduct of the loss itself <a href="#fn_johnson_2016_1" rel="footnote">[Johnson et al. 2016]</a>.</p>
+
+    <div class="footnotes">
+        <ul>
+            <li class="footnote" id="fn_park_2017_1">
+                <p align="left">
+                    Eunbyung Park, Jimei Yang, Ersin Yumer, Duygu Ceylan, and Alexander C. Berg.
+                    <b>Transformation-Grounded Image Generation Network for Novel 3D View Synthesis.</b>
+                    CVPR 2017. <a href="https://arxiv.org/abs/1703.02921">[arXiv]</a>
+                </p>
+            </li>
+            <li class="footnote" id="fn_johnson_2016_1">
+                <p align="left">
+                    Justin Johnson, Alexandre Alahi, Li Fei-Fei.
+                    <b>Perceptual Losses for Real-Time Style Transfer and Super-Resolution.</b>
+                    ECCV 2016.
+                    <a href="https://cs.stanford.edu/people/jcjohns/eccv16/">[Project]</a>
+                    <a href="https://arxiv.org/abs/1603.08155">[arXiv]</a>
+                </p>
+            </li>
+        </ul>
+    </div>
+
+    <style type="text/css">
+        .figure7d-full-image-size {
+            width: 160px;
+            height: 160px;
+        }
+        .figure7d-cutout-image-size {
+            width: 160px;
+            height: 160px;
+        }
+        .figure7d-cutout-rect {
+            stroke:green;
+            stroke-width:2;
+            fill-opacity:0.0;
+            stroke-opacity:1.0;
+        }
+    </style>
+
+    <table align="center" cellpadding="5">
+        <tr>
+            <td align="center">
+                <svg class="figure7d-full-image-size">
+                    <rect 
+                        x="0" y="0" class="figure7d-full-image-size" 
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/kongou_iroha/pu_l1/frame_00000270.png" 
+                        x="0" y="0" class="figure7d-full-image-size" />
+                    <rect 
+                        x="60" y="60" width="40" height="40" 
+                        class="figure7d-cutout-rect" />
+                </svg>
+                <br>
+                <svg class="figure7d-cutout-image-size">
+                    <rect 
+                        x="0" y="0" class="figure7d-cutout-image-size" 
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/kongou_iroha/pu_l1/frame_00000270.png" 
+                        x="-240" y="-240" width="640" height="640" 
+                        />
+                </svg>
+            </td>     
+            <td align="center">
+                <svg class="figure7d-full-image-size">
+                    <rect 
+                        x="0" y="0" class="figure7d-full-image-size" 
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/kongou_iroha/pu_p/frame_00000270.png" 
+                        x="0" y="0" class="figure7d-full-image-size" />
+                    <rect 
+                        x="60" y="60" width="40" height="40" 
+                        class="figure7d-cutout-rect" />
+                </svg>
+                <br>
+                <svg class="figure7d-cutout-image-size">
+                    <rect 
+                        x="0" y="0" class="figure7d-cutout-image-size" 
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/kongou_iroha/pu_p/frame_00000270.png" 
+                        x="-240" y="-240" width="640" height="640" 
+                        />
+                </svg>
+            </td>
+        </tr>
+        <tr>
+            <td align="center">
+                <svg class="figure7d-full-image-size">
+                    <rect 
+                        x="0" y="0" class="figure7d-full-image-size" 
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/tokino_sora/pu_l1/frame_00000120.png" 
+                        x="0" y="0" class="figure7d-full-image-size" />
+                    <rect 
+                        x="60" y="60" width="40" height="40" 
+                        class="figure7d-cutout-rect" />
+                </svg>
+                <br>
+                <svg class="figure7d-cutout-image-size">
+                    <rect 
+                        x="0" y="0" class="figure7d-cutout-image-size" 
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/tokino_sora/pu_l1/frame_00000120.png" 
+                        x="-240" y="-240" width="640" height="640" 
+                        />
+                </svg>
+            </td>            
+            <td align="center">
+                <svg class="figure7d-full-image-size">
+                    <rect 
+                        x="0" y="0" class="figure7d-full-image-size" 
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/tokino_sora/pu_p/frame_00000120.png" 
+                        x="0" y="0" class="figure7d-full-image-size" />
+                    <rect 
+                        x="60" y="60" width="40" height="40" 
+                        class="figure7d-cutout-rect" />
+                </svg>
+                <br>    
+                <svg class="figure7d-cutout-image-size">
+                    <rect 
+                        x="0" y="0" class="figure7d-cutout-image-size" 
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/tokino_sora/pu_p/frame_00000120.png" 
+                        x="-240" y="-240" width="640" height="640" 
+                        />
+                </svg>
+            </td>            
+        </tr>
+        <tr>
+            <td align="center">
+                PU-L1
+            </td>                
+            <td align="center">
+                PU-P
+            </td>
+        </tr>
+    </table>
+    <p align="center"><b>Figure 7D.</b> Images generated by PU-L1 and PU-P.</p>
+
+    <p>ZH-L1 and ZH-P, on the other hand, produce very sharp results as they copy pixels directly from input images. However, they can generate irregular artifacts that may disfigure the characters.</p>
+
+    <table align="center" cellpadding="5">
+        <tr>
+            <td align="center">
+                <svg class="figure7d-full-image-size">
+                    <rect 
+                        x="0" y="0" class="figure7d-full-image-size" 
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/kongou_iroha/zh_l1/frame_00000270.png" 
+                        x="0" y="0" class="figure7d-full-image-size" />
+                    <rect 
+                        x="100" y="80" width="40" height="40" 
+                        class="figure7d-cutout-rect" />
+                </svg>
+                <br>
+                <svg class="figure7d-cutout-image-size">
+                    <rect 
+                        x="0" y="0" class="figure7d-cutout-image-size" 
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/kongou_iroha/zh_l1/frame_00000270.png" 
+                        x="-400" y="-320" width="640" height="640" />
+                </svg>
+            </td>     
+            <td align="center">
+                <svg class="figure7d-full-image-size">
+                    <rect 
+                        x="0" y="0" class="figure7d-full-image-size" 
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/kongou_iroha/zh_p/frame_00000270.png" 
+                        x="0" y="0" class="figure7d-full-image-size" />
+                    <rect 
+                        x="120" y="120" width="40" height="40" 
+                        class="figure7d-cutout-rect" />
+                </svg>
+                <br>
+                <svg class="figure7d-cutout-image-size">
+                    <rect 
+                        x="0" y="0" class="figure7d-cutout-image-size" 
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/kongou_iroha/zh_p/frame_00000270.png" 
+                        x="-480" y="-480" width="640" height="640" />
+                </svg>
+            </td>
+        </tr>
+        <tr>
+            <td align="center">
+                <svg class="figure7d-full-image-size">
+                    <rect 
+                        x="0" y="0" class="figure7d-full-image-size" 
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/tokino_sora/zh_l1/frame_00000120.png" 
+                        x="0" y="0" class="figure7d-full-image-size" />
+                    <rect 
+                        x="100" y="120" width="40" height="40" 
+                        class="figure7d-cutout-rect" />
+                </svg>
+                <br>
+                <svg class="figure7d-cutout-image-size">
+                    <rect 
+                        x="0" y="0" class="figure7d-cutout-image-size" 
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/tokino_sora/zh_l1/frame_00000120.png" 
+                        x="-400" y="-480" width="640" height="640" />
+                </svg>
+            </td>            
+            <td align="center">
+                <svg class="figure7d-full-image-size">
+                    <rect 
+                        x="0" y="0" class="figure7d-full-image-size" 
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/tokino_sora/zh_p/frame_00000120.png" 
+                        x="0" y="0" class="figure7d-full-image-size" />
+                    <rect 
+                        x="100" y="120" width="40" height="40" 
+                        class="figure7d-cutout-rect" />
+                </svg>
+                <br>
+                <svg class="figure7d-cutout-image-size">
+                    <rect 
+                        x="0" y="0" class="figure7d-cutout-image-size" 
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/tokino_sora/zh_p/frame_00000120.png" 
+                        x="-400" y="-480" width="640" height="640" />
+                </svg>
+            </td>            
+        </tr>
+        <tr>
+            <td align="center">
+                ZH-L1
+            </td>                
+            <td align="center">
+                ZH-P
+            </td>
+        </tr>
+    </table>
+    <p align="center"><b>Figure 7E.</b> Images generated by ZH-L1 and ZH-P.</p>
+
+    <p>For configurations using all the subnetworks, most of the faces and bodies are sharp as the combiner chooses those pixels from Zhou et al.'s pathway. Because Pumarola et al.'s pathway is less prone to copying pixels from immediate neighbors than Zhou et al.'s, the combiner can choose from the former's pixels and largely (but not completely) eliminate disturbing artifacts the latter generates. Therefore, the full configurations produce better images than those using only one pathway. The outputs, however, are still blurry in disoccluded parts. Figure 7F shows that, among the 4 full configurations, FU-P-P yields the sharpest results. However, some viewers (including myself) may not like the checkerboard artifacts and prefer the smoother outputs of FU-P-L1.</p>
+
+    <table align="center" cellpadding="5">
+        <tr>
+            <td align="center">
+                <svg class="figure7d-full-image-size">
+                    <rect 
+                        class="figure7d-full-image-size"
+                        x="0" y="0"
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/kongou_iroha/fu_l1_l1/frame_00000270.png" 
+                        x="0" y="0" 
+                        class="figure7d-cutout-image-size" />
+                    <rect 
+                        x="100" y="50" width="40" height="40" 
+                        class="figure7d-cutout-rect" />
+                </svg>
+                <br>
+                <svg class="figure7d-cutout-image-size">
+                    <rect 
+                        x="0" y="0" class="figure7d-cutout-image-size" 
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/kongou_iroha/fu_l1_l1/frame_00000270.png" 
+                        x="-400" y="-200" width="640" height="640" />
+                </svg>
+            </td>     
+            <td align="center">
+                <svg class="figure7d-full-image-size">
+                    <rect 
+                        x="0" y="0" class="figure7d-full-image-size" 
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/kongou_iroha/fu_l1_p/frame_00000270.png" 
+                        x="0" y="0" 
+                        class="figure7d-cutout-image-size" />
+                    <rect 
+                        x="100" y="50" width="40" height="40" 
+                        class="figure7d-cutout-rect" />
+                </svg>
+                <br>
+                <svg class="figure7d-cutout-image-size">
+                    <rect 
+                        x="0" y="0" class="figure7d-cutout-image-size" 
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/kongou_iroha/fu_l1_p/frame_00000270.png" 
+                        x="-400" y="-200" width="640" height="640" />
+                </svg>
+            </td>
+            <td align="center">
+                <svg class="figure7d-full-image-size">
+                    <rect 
+                        x="0" y="0" class="figure7d-full-image-size" 
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/kongou_iroha/fu_p_l1/frame_00000270.png" 
+                        x="0" y="0" 
+                        class="figure7d-cutout-image-size"/>
+                    <rect 
+                        x="100" y="50" width="40" height="40" 
+                        class="figure7d-cutout-rect" />
+                </svg>
+                <br>
+                <svg class="figure7d-cutout-image-size">
+                    <rect 
+                        x="0" y="0" class="figure7d-cutout-image-size" 
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/kongou_iroha/fu_p_l1/frame_00000270.png" 
+                        x="-400" y="-200" width="640" height="640" />
+                </svg>
+            </td>
+            <td align="center">
+                <svg class="figure7d-full-image-size">
+                    <rect 
+                        x="0" y="0" class="figure7d-full-image-size" 
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/kongou_iroha/fu_p_p/frame_00000270.png" 
+                        x="0" y="0" 
+                        class="figure7d-cutout-image-size" />
+                    <rect 
+                        x="100" y="50" width="40" height="40" 
+                        class="figure7d-cutout-rect" />
+                </svg>
+                <br>
+                <svg class="figure7d-cutout-image-size">
+                    <rect 
+                        x="0" y="0" class="figure7d-cutout-image-size" 
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/kongou_iroha/fu_p_p/frame_00000270.png" 
+                        x="-400" y="-200" width="640" height="640" />
+                </svg>
+            </td>     
+        </tr>
+        <tr>
+            <td align="center">
+                <svg class="figure7d-full-image-size">
+                    <rect 
+                        class="figure7d-full-image-size"
+                        x="0" y="0"
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/tokino_sora/fu_l1_l1/frame_00000120.png" 
+                        x="0" y="0" 
+                        class="figure7d-cutout-image-size" />
+                    <rect 
+                        x="100" y="120" width="40" height="40" 
+                        class="figure7d-cutout-rect" />
+                </svg>
+                <br>
+                <svg class="figure7d-cutout-image-size">
+                    <rect 
+                        x="0" y="0" class="figure7d-cutout-image-size" 
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/tokino_sora/fu_l1_l1/frame_00000120.png" 
+                        x="-400" y="-480" width="640" height="640" />
+                </svg>
+            </td>     
+            <td align="center">
+                <svg class="figure7d-full-image-size">
+                    <rect 
+                        x="0" y="0" class="figure7d-full-image-size" 
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/tokino_sora/fu_l1_p/frame_00000120.png" 
+                        x="0" y="0" 
+                        class="figure7d-cutout-image-size" />
+                    <rect 
+                        x="100" y="120" width="40" height="40" 
+                        class="figure7d-cutout-rect" />
+                </svg>
+                <br>
+                <svg class="figure7d-cutout-image-size">
+                    <rect 
+                        x="0" y="0" class="figure7d-cutout-image-size" 
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/tokino_sora/fu_l1_p/frame_00000120.png" 
+                        x="-400" y="-480" width="640" height="640" />
+                </svg>
+            </td>
+            <td align="center">
+                <svg class="figure7d-full-image-size">
+                    <rect 
+                        x="0" y="0" class="figure7d-full-image-size" 
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/tokino_sora/fu_p_l1/frame_00000120.png" 
+                        x="0" y="0" 
+                        class="figure7d-cutout-image-size"/>
+                    <rect 
+                        x="100" y="120" width="40" height="40" 
+                        class="figure7d-cutout-rect" />
+                </svg>
+                <br>
+                <svg class="figure7d-cutout-image-size">
+                    <rect 
+                        x="0" y="0" class="figure7d-cutout-image-size" 
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/tokino_sora/fu_p_l1/frame_00000120.png" 
+                        x="-400" y="-480" width="640" height="640" />
+                </svg>
+            </td>
+            <td align="center">
+                <svg class="figure7d-full-image-size">
+                    <rect 
+                        x="0" y="0" class="figure7d-full-image-size" 
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/tokino_sora/fu_p_p/frame_00000120.png" 
+                        x="0" y="0" 
+                        class="figure7d-cutout-image-size" />
+                    <rect 
+                        x="100" y="120" width="40" height="40" 
+                        class="figure7d-cutout-rect" />
+                </svg>
+                <br>
+                <svg class="figure7d-cutout-image-size">
+                    <rect 
+                        x="0" y="0" class="figure7d-cutout-image-size" 
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/tokino_sora/fu_p_p/frame_00000120.png" 
+                        x="-400" y="-480" width="640" height="640" />
+                </svg>
+            </td>     
+        </tr>
+        <tr>
+            <td align="center">
+                <svg class="figure7d-full-image-size">
+                    <rect 
+                        x="0" y="0" class="figure7d-full-image-size" 
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/weatheroid_airi/fu_l1_l1/frame_00000180.png" 
+                        x="0" y="0" 
+                        class="figure7d-cutout-image-size" />
+                    <rect 
+                        x="90" y="30" width="40" height="40" 
+                        class="figure7d-cutout-rect" />
+                </svg>
+                <br>
+                <svg class="figure7d-cutout-image-size">
+                    <rect 
+                        x="0" y="0" class="figure7d-cutout-image-size" 
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/weatheroid_airi/fu_l1_l1/frame_00000180.png" 
+                        x="-360" y="-120" width="640" height="640" />
+                </svg>
+            </td>            
+            <td align="center">
+                <svg class="figure7d-full-image-size">
+                    <rect 
+                        x="0" y="0" class="figure7d-full-image-size" 
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/weatheroid_airi/fu_l1_p/frame_00000180.png" 
+                        x="0" y="0" 
+                        class="figure7d-cutout-image-size" />
+                    <rect 
+                        x="90" y="30" width="40" height="40" 
+                        class="figure7d-cutout-rect" />
+                </svg>
+                <br>
+                <svg class="figure7d-cutout-image-size">
+                    <rect 
+                        x="0" y="0" class="figure7d-cutout-image-size" 
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/weatheroid_airi/fu_l1_p/frame_00000180.png" 
+                        x="-360" y="-120" width="640" height="640" />
+                </svg>
+            </td>
+            <td align="center">
+                <svg class="figure7d-full-image-size">
+                    <rect 
+                        x="0" y="0"
+                        class="figure7d-cutout-image-size"
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/weatheroid_airi/fu_p_l1/frame_00000180.png" 
+                        x="0" y="0"
+                        class="figure7d-cutout-image-size" />
+                    <rect 
+                        x="90" y="30" width="40" height="40" 
+                        class="figure7d-cutout-rect" />
+                </svg>
+                <br>
+                <svg class="figure7d-cutout-image-size">
+                    <rect 
+                        x="0" y="0" class="figure7d-cutout-image-size" 
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/weatheroid_airi/fu_p_l1/frame_00000180.png" 
+                        x="-360" y="-120" width="640" height="640" />
+                </svg>
+            </td>            
+            <td align="center">
+                <svg class="figure7d-full-image-size">
+                    <rect 
+                        x="0" y="0"
+                        class="figure7d-cutout-image-size"
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/weatheroid_airi/fu_p_p/frame_00000180.png" 
+                        x="0" y="0" 
+                        class="figure7d-cutout-image-size" />
+                    <rect 
+                        x="90" y="30" width="40" height="40" 
+                        class="figure7d-cutout-rect" />
+                </svg>
+                <br>
+                <svg class="figure7d-cutout-image-size">
+                    <rect 
+                        x="0" y="0" class="figure7d-cutout-image-size" 
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/weatheroid_airi/fu_p_p/frame_00000180.png" 
+                        x="-360" y="-120" width="640" height="640" />
+                </svg>
+            </td>
+        </tr>
+        <tr>
+            <td align="center">
+                FU-L1-L1
+            </td>                
+            <td align="center">
+                FU-L1-P
+            </td>
+            <td align="center">
+                FU-P-L1
+            </td>
+            <td align="center">
+                FU-P-P
+            </td>
+        </tr>
+    </table>
+    <p align="center"><b>Figure 7F.</b> Images generated by FU-L1-L1, FU-L1-P, FU-P-L1, and FU-P-P.</p>
+
+    <p>I note that all networks seem to have some high level understanding of the characters' anatomy. For example, Yamato Iori's right eye is occluded by hair, and no networks makes the occluding hair move when she closes her eyes. However, we can also observe many interesting failure cases due to incorrect image parsing. For example, Yozakura Tama has a long braid that falls to the front of her body. All network configurations sever it into two pieces and move only the top part along with the head as in Figure 7Ga. They can also misinterpret clothing and accessories as parts of the head as shown in Figure 7Gb and 7Gc.</p>
+
+    <table align="center" cellpadding="5">        
+        <tr>            
+            <td align="center">
+                Ground Truth<br/>
+                <svg class="figure7d-full-image-size">
+                    <rect 
+                        x="0" y="0"
+                        class="figure7d-cutout-image-size"
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/yozakura_tama/ground_truth/frame_00000210.png"
+                        x="0" y="0" 
+                        class="figure7d-cutout-image-size" />
+                    <rect 
+                        x="50" y="120" width="40" height="40" 
+                        class="figure7d-cutout-rect" />
+                </svg>
+                <br>
+                <svg class="figure7d-cutout-image-size">
+                    <rect 
+                        x="0" y="0" class="figure7d-cutout-image-size" 
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/yozakura_tama/ground_truth/frame_00000210.png"
+                        x="-200" y="-480" width="640" height="640" />
+                </svg>
+            </td>
+            <td align="center">
+                FU-P-P<br/>
+                <svg class="figure7d-full-image-size">
+                    <rect 
+                        x="0" y="0"
+                        class="figure7d-cutout-image-size"
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/yozakura_tama/fu_p_p/frame_00000210.png"
+                        x="0" y="0" 
+                        class="figure7d-cutout-image-size" />
+                    <rect 
+                        x="50" y="120" width="40" height="40" 
+                        class="figure7d-cutout-rect" />
+                </svg>
+                <br>
+                <svg class="figure7d-cutout-image-size">
+                    <rect 
+                        x="0" y="0" class="figure7d-cutout-image-size" 
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/yozakura_tama/fu_p_p/frame_00000210.png"
+                        x="-200" y="-480" width="640" height="640" />
+                </svg>
+            </td>
+        </tr>        
+    </table>
+    <p align="center">(a) Yozakura Tama's severed braid.</p>    
+    <table align="center" cellpadding="5">
+        <tr>            
+            <td align="center">
+                Ground Truth<br/>
+                <svg class="figure7d-full-image-size">
+                    <rect 
+                        x="0" y="0"
+                        class="figure7d-cutout-image-size"
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/shibuya_haru/ground_truth/frame_00000060.png"
+                        x="0" y="0" 
+                        class="figure7d-cutout-image-size" />
+                    <rect 
+                        x="20" y="60" width="80" height="80" 
+                        class="figure7d-cutout-rect" />
+                </svg>
+                <br>
+                <svg class="figure7d-cutout-image-size">
+                    <rect 
+                        x="0" y="0" class="figure7d-cutout-image-size" 
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/shibuya_haru/ground_truth/frame_00000060.png"
+                        x="-40" y="-120" width="320" height="320" />
+                </svg>
+            </td>
+            <td align="center">
+                FU-P-P<br/>
+                <svg class="figure7d-full-image-size">
+                    <rect 
+                        x="0" y="0"
+                        class="figure7d-cutout-image-size"
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/shibuya_haru/fu_p_p/frame_00000060.png"
+                        x="0" y="0" 
+                        class="figure7d-cutout-image-size" />
+                    <rect 
+                        x="20" y="60" width="80" height="80" 
+                        class="figure7d-cutout-rect" />
+                </svg>
+                <br>
+                <svg class="figure7d-cutout-image-size">
+                    <rect 
+                        x="0" y="0" class="figure7d-cutout-image-size" 
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/shibuya_haru/fu_p_p/frame_00000060.png"
+                        x="-40" y="-120" width="320" height="320" />
+                </svg>
+            </td>
+        </tr>
+    </table>
+    <p align="center">(b) Shibuya Haru's katana moves with the head.</p>
+    <table align="center" cellpadding="5">
+        <tr>            
+            <td align="center">
+                Ground Truth<br/>
+                <svg class="figure7d-full-image-size">
+                    <rect 
+                        x="0" y="0"
+                        class="figure7d-cutout-image-size"
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/kiso_azuki/ground_truth/frame_00000060.png"
+                        x="0" y="0" 
+                        class="figure7d-cutout-image-size" />
+                    <rect 
+                        x="20" y="60" width="80" height="80" 
+                        class="figure7d-cutout-rect" />
+                </svg>
+                <br>
+                <svg class="figure7d-cutout-image-size">
+                    <rect 
+                        x="0" y="0" class="figure7d-cutout-image-size" 
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/kiso_azuki/ground_truth/frame_00000060.png"
+                        x="-40" y="-120" width="320" height="320" />
+                </svg>
+            </td>
+            <td align="center">
+                FU-P-P<br/>
+                <svg class="figure7d-full-image-size">
+                    <rect 
+                        x="0" y="0"
+                        class="figure7d-cutout-image-size"
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/kiso_azuki/fu_p_p/frame_00000060.png"
+                        x="0" y="0" 
+                        class="figure7d-cutout-image-size" />
+                    <rect 
+                        x="20" y="60" width="80" height="80" 
+                        class="figure7d-cutout-rect" />
+                </svg>
+                <br>
+                <svg class="figure7d-cutout-image-size">
+                    <rect 
+                        x="0" y="0" class="figure7d-cutout-image-size" 
+                        style="fill:black;" 
+                        />
+                    <image 
+                        xlink:href="data/videos/kiso_azuki/fu_p_p/frame_00000060.png"
+                        x="-40" y="-120" width="320" height="320" />
+                </svg>
+            </td>
+        </tr>
+    </table>
+    <p align="center">(c) Misinterpreting Kiso Azuki's jacket as a part of her hair.</p>
+    <p align="center"><b>Figure 7G.</b> Failure cases due to incorrect image parsings.</p>
+
+    <p>In conclusion, FU-P-L1 and FU-P-P seem to be the best network configurations as they generate mostly sharp outputs without few large-scale artifacts. FU-P-P produces sharper images that have checkerboard patterns while FU-P-L1 produces blurrier but smoother results. Both networks may parse input images incorrectly, leading them to create anatomically/physically implausible animations.</p>
+
+    <h3>7.3 &nbsp; Animating Drawings</h3><a href="animating-drawings"></a>
+
+    <p>    
+    The end goal of this project is to be able to animate drawings that are not 3D renderings. I assessed how well my approach worked by using the best networks, FU-P-P, to animate images of VTubers affiliated with <a href="https://nijisanji.ichikara.co.jp/member/">Nijisanji</a> <a href="#fn_nijisanji_guideline">(see footnote)</a> and characters generated by <a href="https://waifulabs.com">Waifu Labs</a>. I show videos of 16 characters in the figure below. You can see more videos using the interactive viewer in <a href="#drawing-videos-viewer">Appendix B.2</a>.
+    </p>
+
+    <div class="footnotes">
+        <ul>
+            <li class="footnote" id="fn_nijisanji_guideline">
+                They have a <a href="https://event.nijisanji.app/guidelines/">very lenient guideline for derivative works</a> which I have interpreted that official artworks can be used in the pursuit of hobbies as long as they are not sold or used for commercial purposes. In fact, there are <a href="https://wikiwiki.jp/nijisanji/%E3%82%B2%E3%83%BC%E3%83%A0%E4%B8%80%E8%A6%A7">fan-made games created using official materials</a>. I think that what I'm doing in this article is not different from the games.
+            </li>
+        </ul>
+    </div>
+
+    <p align="center" id="drawingVideos">    
+    </p>
+    <p align="center"><b>Figure 7H.</b> Results of applying the best network, FU-P-P, to drawings.</p>
+
+    <p>Because the networks were trained on rendering of anime characters, they generalized well to drawings with the same art style. I would like to note that they handled the eyes especially well. For most characters, they correctly closed the eyes even when some parts are occluded by hair. However, we can observe several failure modes:</p>
+
+    <ul>
+        <li><p>When the character's appearance deviates much from the training dataset, the networks may incorrectly parse the face, leading to nonsensical movements. For example, while most characters in the training set have yellow or brown skins, <a href="https://www.youtube.com/channel/UCUzJ90o1EjqUbk2pBAy0_aw">Gilzaren III</a>'s skin is purple. After being animated, his eyes and right ear do not move, and his face looks completely flat when rotated.</p>
+
+        <p align="center">
+            <svg width="200" height="200">
+                <rect 
+                    x="0" y="0" width="200" height="200" 
+                    style="fill:black;" 
+                    />
+                <image 
+                    xlink:href="data/videos/gilzaren_iii/fu_p_p/frame_00000239.png"/
+                    width="200"
+                    height="200">
+            </svg>
+            <br>
+            <b>Figure 7I.</b> FU-P-P incorrectly rotate Gilzaren III's face.
+        </p>
+        </li>
+
+        <li>
+        <p>The face morpher did not completely close the mouths of some characters. As I noticed that these characters' mouth colors are close to the surrounding skin, I tried repainting the mouth with darker colors and found the morpher managed to close the mouths all the way. This indicates a bias in the dataset towards high contrast between mouth and skin colors.</p>
+
+        <table align="center" cellpadding="1">
+            <tr>                
+                <td colspan="5" align="center"><b>Frames generated from unmodified original images</b></td>
+            </tr>
+            <tr>
+                <td align="center">
+                    <svg width="128" height="128">
+                        <rect width="128" height="128" style="fill: black;"/>
+                        <image 
+                            xlink:href="data/videos/honma_himawari/fu_p_p/frame_00000000.png" 
+                            x="-64" y="-64"
+                            width="256" height="256">
+                    </svg>
+                    <br>
+                    Frame 0
+                </td>
+                <td align="center">
+                    <svg width="128" height="128">
+                        <rect width="128" height="128" style="fill: black;"/>
+                        <image 
+                            xlink:href="data/videos/honma_himawari/fu_p_p/frame_00000030.png" 
+                            x="-64" y="-64"
+                            width="256" height="256">
+                    </svg>
+                    <br>
+                    Frame 30
+                </td>
+                <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>         
+                <td align="center">
+                    <svg width="128" height="128">
+                        <rect width="128" height="128" style="fill: black;"/>
+                        <image 
+                            xlink:href="data/videos/sasaki_saku/fu_p_p/frame_00000000.png" 
+                            x="-64" y="-64"
+                            width="256" height="256">
+                    </svg>
+                    <br>
+                    Frame 0
+                </td>
+                <td align="center">
+                    <svg width="128" height="128">
+                        <rect width="128" height="128" style="fill: black;"/>
+                        <image 
+                            xlink:href="data/videos/sasaki_saku/fu_p_p/frame_00000030.png" 
+                            x="-64" y="-64"
+                            width="256" height="256">
+                    </svg>
+                    <br>
+                    Frame 30
+                </td>
+            </tr>
+            <tr>                
+                <td colspan="5" align="center"><b>Frames generated from images with mouth repainted</b></td>
+            </tr>
+            <tr>
+                <td align="center">
+                    <svg width="128" height="128">
+                        <rect width="128" height="128" style="fill: black;"/>
+                        <image 
+                            xlink:href="data/videos/honma_himawari_mouth_fixed/fu_p_p/frame_00000000.png" 
+                            x="-64" y="-64"
+                            width="256" height="256">
+                    </svg>
+                    <br>
+                    Frame 0
+                </td>
+                <td align="center">
+                    <svg width="128" height="128">
+                        <rect width="128" height="128" style="fill: black;"/>
+                        <image 
+                            xlink:href="data/videos/honma_himawari_mouth_fixed/fu_p_p/frame_00000030.png" 
+                            x="-64" y="-64"
+                            width="256" height="256">
+                    </svg>
+                    <br>
+                    Frame 30
+                </td>               
+                <td>&nbsp;</td> 
+                <td align="center">
+                    <svg width="128" height="128">
+                        <rect width="128" height="128" style="fill: black;"/>
+                        <image 
+                            xlink:href="data/videos/sasaki_saku_mouth_fixed/fu_p_p/frame_00000000.png" 
+                            x="-64" y="-64"
+                            width="256" height="256">
+                    </svg>
+                    <br>
+                    Frame 0
+                </td>
+                <td align="center">
+                    <svg width="128" height="128">
+                        <rect width="128" height="128" style="fill: black;"/>
+                        <image 
+                            xlink:href="data/videos/sasaki_saku_mouth_fixed/fu_p_p/frame_00000030.png" 
+                            x="-64" y="-64"
+                            width="256" height="256">
+                    </svg>
+                    <br>
+                    Frame 30
+                </td>
+            </tr>
+        </table>
+        <p><b>Figure 7J.</b> Two characters (<a href="https://www.youtube.com/channel/UC0g1AE0DOjBYnLhkgoRWN1w">Honma Himawari</a> and <a href="https://www.youtube.com/channel/UCoztvTULBYd3WmStqYeoHcA">Sasaki Saku</a>) which FU-P-P failed to completely close their mouths (top row). Here, I show two frames from the videos in Figure 7H. The mouths are fully opened in Frame 0 and become fully closed in Frame 30. In the bottom row, I experimented with repainting the mouths so as to increase contrast between the mouth and the surrounding skin. It results in much better mouth closure, implying that the face morpher has overfitted to high contrast between mouth and skin colors.</p>
+        </li>
+
+        <li>
+        <p>As might already be observed in Figure 7J, the areas where the face morpher modifies the image do not blend smoothly with the surrounding pixels. They can be seen as circles around the closed eyes and mouths with colors slightly darker than the surrounding skin. This problem, however, does not show up when animating 3D renderings from the test dataset, suggesting that it is caused by differences between my datasets and drawings in the wild.</p>
+
+        <p>I then observed that my renderings look generally darker than the drawings, and so the face morpher may have learned to output darker skin colors. To test this theory, I changed the way I set scene lightings and regenerated the datasets. This time, instead of setting the ambient light magnitude to a constant value of $0.5$, I sampled the magnitude from the interval $[0.5,1.2]$, so that most generated images would become brighter. The face morpher trained with the new training datasets managed to close eyes and mouths without introducing dark circles. (However, in some cases, it unfortunately introduces new artifacts.)</p>
+
+        <table align="center">            
+            <tr>
+                <td>&nbsp;</td>
+                <td width="10"></td>
+                <td align="center">Frame 0</td>
+                <td align="center">Frame 10</td>
+                <td align="center">Frame 20</td>
+                <td align="center">Frame 30</td>
+                <td width="10"></td>
+                <td>&nbsp;</td>
+            </tr>
+            <tr>
+                <td align="right"><b>(a)</b></td>
+                <td width="10"></td>
+                <td align="center">
+                    <svg width="128" height="128">
+                        <rect width="128" height="128" style="fill: black;"/>
+                        <image 
+                            xlink:href="data/videos/otogibara_era/fu_p_p/frame_00000000.png" 
+                            x="-64" y="-64"
+                            width="256" height="256">
+                    </svg>
+                </td>
+                <td align="center">
+                    <svg width="128" height="128">
+                        <rect width="128" height="128" style="fill: black;"/>
+                        <image 
+                            xlink:href="data/videos/otogibara_era/fu_p_p/frame_00000010.png" 
+                            x="-64" y="-64"
+                            width="256" height="256">
+                    </svg>
+                </td>
+                <td align="center">
+                    <svg width="128" height="128">
+                        <rect width="128" height="128" style="fill: black;"/>
+                        <image 
+                            xlink:href="data/videos/otogibara_era/fu_p_p/frame_00000020.png" 
+                            x="-64" y="-64"
+                            width="256" height="256">
+                    </svg>
+                </td>
+                <td align="center">
+                    <svg width="128" height="128">
+                        <rect width="128" height="128" style="fill: black;"/>
+                        <image 
+                            xlink:href="data/videos/otogibara_era/fu_p_p/frame_00000030.png" 
+                            x="-64" y="-64"
+                            width="256" height="256">
+                    </svg>
+                </td>                
+            </tr>
+            <tr>
+                <td align="right"><b>(b)</b></td>
+                <td width="10"></td>
+                <td align="center">
+                    <svg width="128" height="128">
+                        <rect width="128" height="128" style="fill: black;"/>
+                        <image 
+                            xlink:href="data/videos/otogibara_era_morpher_fixed/fu_p_p/frame_00000000.png" 
+                            x="-64" y="-64"
+                            width="256" height="256">
+                    </svg>
+                </td>
+                <td align="center">
+                    <svg width="128" height="128">
+                        <rect width="128" height="128" style="fill: black;"/>
+                        <image 
+                            xlink:href="data/videos/otogibara_era_morpher_fixed/fu_p_p/frame_00000010.png" 
+                            x="-64" y="-64"
+                            width="256" height="256">
+                    </svg>
+                </td>
+                <td align="center">
+                    <svg width="128" height="128">
+                        <rect width="128" height="128" style="fill: black;"/>
+                        <image 
+                            xlink:href="data/videos/otogibara_era_morpher_fixed/fu_p_p/frame_00000020.png" 
+                            x="-64" y="-64"
+                            width="256" height="256">
+                    </svg>
+                </td>
+                <td align="center">
+                    <svg width="128" height="128">
+                        <rect width="128" height="128" style="fill: black;"/>
+                        <image 
+                            xlink:href="data/videos/otogibara_era_morpher_fixed/fu_p_p/frame_00000030.png" 
+                            x="-64" y="-64"
+                            width="256" height="256">
+                    </svg>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="8" height="10"></td>
+            </tr>
+            <tr>
+                <td>&nbsp;</td>
+                <td width="10"></td>
+                <td align="center">Frame 0</td>
+                <td align="center">Frame 10</td>
+                <td align="center">Frame 20</td>
+                <td align="center">Frame 30</td>
+                <td width="10"></td>
+                <td>&nbsp;</td>
+            </tr>
+            <tr>
+                <td align="right"><b>(a)</b></td>
+                <td width="10"></td>
+                <td align="center">
+                    <svg width="128" height="128">
+                        <rect width="128" height="128" style="fill: black;"/>
+                        <image 
+                            xlink:href="data/videos/machita_chima/fu_p_p/frame_00000000.png" 
+                            x="-64" y="-64"
+                            width="256" height="256">
+                    </svg>
+                </td>
+                <td align="center">
+                    <svg width="128" height="128">
+                        <rect width="128" height="128" style="fill: black;"/>
+                        <image 
+                            xlink:href="data/videos/machita_chima/fu_p_p/frame_00000010.png" 
+                            x="-64" y="-64"
+                            width="256" height="256">
+                    </svg>
+                </td>
+                <td align="center">
+                    <svg width="128" height="128">
+                        <rect width="128" height="128" style="fill: black;"/>
+                        <image 
+                            xlink:href="data/videos/machita_chima/fu_p_p/frame_00000020.png" 
+                            x="-64" y="-64"
+                            width="256" height="256">
+                    </svg>
+                </td>
+                <td align="center">
+                    <svg width="128" height="128">
+                        <rect width="128" height="128" style="fill: black;"/>
+                        <image 
+                            xlink:href="data/videos/machita_chima/fu_p_p/frame_00000030.png" 
+                            x="-64" y="-64"
+                            width="256" height="256">
+                    </svg>
+                </td>                
+            </tr>
+            <tr>
+                <td align="right"><b>(b)</b></td>
+                <td width="10"></td>
+                <td align="center">
+                    <svg width="128" height="128">
+                        <rect width="128" height="128" style="fill: black;"/>
+                        <image 
+                            xlink:href="data/videos/machita_chima_morpher_fixed/fu_p_p/frame_00000000.png" 
+                            x="-64" y="-64"
+                            width="256" height="256">
+                    </svg>
+                </td>
+                <td align="center">
+                    <svg width="128" height="128">
+                        <rect width="128" height="128" style="fill: black;"/>
+                        <image 
+                            xlink:href="data/videos/machita_chima_morpher_fixed/fu_p_p/frame_00000010.png" 
+                            x="-64" y="-64"
+                            width="256" height="256">
+                    </svg>
+                </td>
+                <td align="center">
+                    <svg width="128" height="128">
+                        <rect width="128" height="128" style="fill: black;"/>
+                        <image 
+                            xlink:href="data/videos/machita_chima_morpher_fixed/fu_p_p/frame_00000020.png" 
+                            x="-64" y="-64"
+                            width="256" height="256">
+                    </svg>
+                </td>
+                <td align="center">
+                    <svg width="128" height="128">
+                        <rect width="128" height="128" style="fill: black;"/>
+                        <image 
+                            xlink:href="data/videos/machita_chima_morpher_fixed/fu_p_p/frame_00000030.png" 
+                            x="-64" y="-64"
+                            width="256" height="256">
+                    </svg>
+                </td>
+            </tr>
+        </table>
+        <p><b>Figure 7K.</b> (a) The face morpher, trained with renderings under constant ambient light, tends to generate circles of darker colors around closed eyes and mouth. (b) Training with renderings with varying ambient light alleviates this problem.</p>
+        </li>
+
+        <p>Because these dark circles are very noticeable, I used the face morpher trained with varying ambient lights to generate all results in the next section.</p>
+    </ul>
+
+    <h3>7.4 &nbsp; Miscelleneous Results</h3>
+
+    <p>
+        Because the neural networks take the numerical pose parameters as input, it can be used with any kinds of processes that produce these numbers. As you have seen in the abstract, I wrote a tool that allows the pose parameters to be specified manually through GUI elements.
+    </p>
+
+    <p align="center">
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/kMQCERkTdO0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </p>
+
+    <p>
+        Pose parameters can also be derived from a facial landmark tracker. In the video below, I used <a href="https://github.com/lincolnhard/head-pose-estimation/blob/master/video_test_shape.py">a tracker implemented with dlib and OpenCV</a> to process a live webcam stream, enabling me to have the characters imitate my facial movements.
+    </p>
+        
+    <p align="center">
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/T1Gp-RxFZwU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </p>
+
+    <p>
+        I also applied the system to videos of public figures.
+    </p>
+
+    <p align="center">
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/FioRJ6x_RbI" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </p>
+
+    <p align="center">
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/wFH2Pb2NTfg" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </p>
+
+    <p align="center">
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/qKpAfGDEXqA" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </p>
+
+    <p align="center">
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/Z_DyxdRAzBQ" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </p>
+
+    <h2>8 &nbsp; Related Works</h2><a name="related-works"></a>
+
+    <p><b>Image translation.</b> The networks I developed solve an instance of the <i>image translation</i> problem: we are given an image and some optional extra information, and we are asked to produce another image that satisfies some requirements. Pix2pix is a general framework for image translation that casts the problem into creating a conditional generative adversarial network (cGAN) that takes the input image as a conditioning information <a href="#fn_isola_2017" rel="footnote">[Isola et al. 2017]</a>. Subsequent works extends it to allow unsupervised learning <a href="#fn_zhu_2017" rel="footnote">[Zhu et al. 2017]</a>, and modification of multiple image attributes by a single network <a href="#fn_choi_2018"></a>. To animate eyes and mouths, my work relies on Pumarola et al.'s paper <a href="#fn_pumarola_2018_2">[Pumarola et al. 2018]</a> in which the extra information is the AUs describing a human facial expression. All these works use GAN to automatically discover a loss function tailored to their domains. However, I only used fixed loss functions and was surprised that the approach worked well as it did.</p>
+
+    <div class='footnotes'>
+        <ul>
+            <li class='footnote' id="fn_isola_2017">
+                Phillip Isola, Jun-Yan Zhu, Tinghui Zhou, and Alexei A. Efros.
+                <b>Image-to-Image Translation with Conditional Adversarial Networks.</b>
+                CVPR 2017.
+                <a href="https://phillipi.github.io/pix2pix/">[Project]</a>
+                <a href="https://arxiv.org/abs/1611.07004">arXiv</a>
+            </li>
+            <li class="footnote" id="fn_zhu_2017">
+                Jun-Yan Zhu, Taesung Park, Phillip Isola, and Alexei A. Efros.
+                <b>Unpaired Image-to-Image Translation using Cycle-Consistent Adversarial Networks.</b>
+                ICCV 2017.
+                <a href="https://junyanz.github.io/CycleGAN/">[Project]</a>
+                <a href="https://arxiv.org/abs/1703.10593">[arXiv]</a>
+            </li>
+            <li class="footnote" id="fn_choi_2018">
+                Yunjey Choi, Minje Choi, Munyoung Kim, Jung-Woo Ha, Sunghun Kim, and Jaegul Choo
+                <b>StarGAN: Unified Generative Adversarial Networks for Multi-Domain Image-to-Image Translation.</b>
+                CVPR 2018.
+                <a href="https://arxiv.org/abs/1711.09020">[arXiv]</a>
+            </li>
+            <li class="footnote" id="fn_pumarola_2018_2">
+                Albert Pumarola, Antonio Agudo, Aleix M. Martínez, Alberto Sanfeliu, and Francesc Moreno-Noguer.
+                <b>GANimation: Anatomically-Aware Facial Animation from a Single Image.</b>
+                ECCV 2018. <a href="https://www.albertpumarola.com/research/GANimation/">[Project]</a> <a href="https://arxiv.org/abs/1807.09251">[arXiv]</a>
+            </li>
+        </ul>
+    </div>
+
+    <p><b>Object rotation.</b> My work also borrows from previous works that attempt to rotate objects in images. This problem is an instance of image translation where the extra information is the angles to rotate the object by. Tatarchenko et al. trained a neural network to rotate renderings of cars and chairs from the <a href="https://www.shapenet.org/">ShapeNet dataset</a> <a href="#fn_tatarchenko_2016_1">[Tatarchenko et al. 2016]</a>. However, because their network produces the pixels directly and uses L2 loss on the output images, the results are too blurry to be used in media production. Zhou et al. use appearance flow to make the results much sharper <a href="#fn_zhou_2016_2"></a>, and I use their algorithm to rotate faces. Nevertheless, appearance flow can produce nonsensical pixels in disoccluded areas. Park et al. solve this problem by keeping only the pixels that were visible before rotation and having a GAN fill in the missing disoccluded parts <a href="#fn_park_2017_2">[Park et al. 2017]</a>. My approach also fixes disoccluded parts, but it combines appearance flow results with that of another algorithm rather than generating missing pixels from scratch.</p>
+
+    <div class="foonotes">
+        <ul>
+            <li class="footnote" id="fn_tatarchenko_2016_1">
+                Maxim Tatarchenko, Alexey Dosovitskiy, Thomas Brox.
+                <b>Multi-view 3D Models from Single Images with a Convolutional Network.</b>
+                ECCV 16.
+                <a href="https://arxiv.org/abs/1511.06702">[arXiv]</a>
+            </li>
+            <li class='foonote' id="fn_zhou_2016_2">
+                Tinghui Zhou, Shubham Tulsiani, Weilun Sun, Jitendra Malik,  and Alexei A. Efros.
+                <b>View Synthesis by Appearance Flow.</b>
+                ECCV 2016.
+                <a href="https://arxiv.org/abs/1605.03557">[arXiv]</a>
+            </li>
+            <li class="footnote" id="fn_park_2017_2">
+                <p align="left">
+                    Eunbyung Park, Jimei Yang, Ersin Yumer, Duygu Ceylan, and Alexander C. Berg.
+                    <b>Transformation-Grounded Image Generation Network for Novel 3D View Synthesis.</b>
+                    CVPR 2017. <a href="https://arxiv.org/abs/1703.02921">[arXiv]</a>
+                </p>
+            </li>
+        </ul>
+    </div>
+
+    <p><b>Animating human images.</b> Creating animation from a single or a few human images has been researched extensively by the graphics and vision communities, and much progress was made recently thanks to deep learning. These works typically seek to make the human in a given "target" image or video imitate the action of another human in a separate "driving" video. Chan et al. devise a pipeline to make the target person imitate the full-body dance moves of the driving video <a href="#fn_chan_2019">[Chan et al. 2019]</a>. It makes extensive use of neural pose estimation and requires a video of the target person in the training phase. Zakharov et al. train embedder network to map one or several target images into a latent code, which is used to control a generator network to translates a facial landmark image so that it has the face of the target human <a href="#fn_zakharov_2019">[Zakarov et al. 2019]</a>.  Wang et al. propose a general framework for video translation in which target images are transformed to weights of a part of an image generation network <a href="#fn_wang_2019">[Wang et al. 2019]</a>. Their approach can transfer facial expressions as well as full-body poses. Note that these works solve problems that are different from mine because their source of movement is the driving video rather than a sequence of abstract parameters.</p>
+
+    <div class="footnotes">
+        <ul>
+            <li class="footnote" id="fn_zakharov_2019">
+                Egor Zakharov, Aliaksandra Shysheya, Egor Burkov, and Victor Lempitsky.
+                <b>Few-Shot Adversarial Learning of Realistic Neural Talking Head Models.</b>
+                <a href="https://arxiv.org/abs/1905.08233">[arXiv]</a>
+            </li>
+            <li class="footnote" id="fn_chan_2019">
+                 Caroline Chan, Shiry Ginosar, Tinghui Zhou, and Alexei A. Efros. 
+                <b>Everybody Dance Now.</b>
+                ICCV 2019
+                <a href="https://carolineec.github.io/everybody_dance_now/">[Project]</a>
+                <a href="https://arxiv.org/abs/1808.07371">[arXiv]</a>
+            </li>
+            <li class="footnote" id="fn_wang_2019">
+                 Ting-Chun Wang, Ming-Yu Liu, Andrew Tao, Guilin Liu, Jan Kautz, and Bryan Catanzaro.
+                 <b>Few-shot Video-to-Video Synthesis.</b>
+                 <a href="https://nvlabs.github.io/few-shot-vid2vid/">[Project]</a>
+                 <a href="https://arxiv.org/abs/1910.12713">[arXiv]</a>
+            </li>
+        </ul>
+    </div>
+
+    <p><b>Animating artworks.</b> Researchers have also used machine learning to animate drawings. Hamada et al. trained a GAN to generate fully-body images of anime characters, conditioned on a stick figure image that specifies the character's pose <a href="#fn_hamada_2018">[Hamada et al. 2018]</a>. Their work is different from mine in two ways. First, the character's appearance is determined by the latent code and so cannot be specified directly like in my work. Second, their GAN requires a full-body stick figure image as conditioning information while my network requires only the pose parameter values. Researchers from <a href="https://preferred.jp/">Preferred Networks</a> showed in <a href="http://crypko.ai/#/">their website</a> that they could smoothly animate facial expressions of anime characters. Their approach seems to be able to generate a variety of mouth and eye shapes, and the outputs are overall sharp and free of artifacts. However, it is unclear whether the character's identity is well preserved by their algorithm: one can see that the irises change color as the eyes are closed. <a href="https://twitter.com/kvfrans">Kevin Frans</a>, who interned at Sizigi Studio (the creator of Waifu Labs), <a href="https://twitter.com/kvfrans/status/1165053750202888192">demonstrated a system</a> that can make a Waifu-Labs generated character imitate actions of another character in a video. As the target character appearance is controlled by a latent code, the system may not be able to animate existing characters like my approach does. In August 2019, <a href="https://www.algoage.net/">AlgoAge</a>, a Japanese AI startup, recently promoted <a href="https://prtimes.jp/main/html/rd/p/000000002.000040318.html">DeepAnime</a>: a system that can animate the eyes and mouth of existing characters given voice recordings. The system takes different inputs from my networks, and face rotation does not seem to be a feature. Lastly, Poursaeed et al. trained a network that deforms a 2.5D character model to a given image of the same character with a different pose, allowing inbetween frames to be generated by interpolating the model parameters <a href="#fn_poursaeed_2019" rel="footnote">[Poursaeed et al. 2019]</a>. However, their approach requires human intervention because the the model must be created by manually segmenting a reference frame.</p>    
+
+    <div class="foonotes">
+        <ul>
+            <li class="footnote" id="fn_hamada_2018">
+                Koichi Hamada, Kentaro Tachibana, Tianqi Li, Hiroto Honda, and Yusuke Uchida.
+                <b>Full-body High-resolution Anime Generation with Progressive Structure-conditional Generative Adversarial Networks</b>
+                ECCV Workshop on Computer Vision for Fashion, Art, and Design, 2018.
+            </li>
+            <li class="footnote" id="fn_poursaeed_2019">
+                Omid Poursaeed, Vladimir G. Kim, Eli Shechtman, Jun Saito, and Serge Belongie.
+                <b>Neural Puppet: Generative Layered Cartoon Characters</b>
+                <a href="https://arxiv.org/abs/1910.02060">[arXiv]</a>
+            </li>
+        </ul>
+    </div>
+
+    <h2>9 &nbsp; Conclusion</h2><a name="conclusion"></a>
+
+    <p>I have presented a neural network system that can modify facial expression and rotate the face of an anime character, given only a single image of the character looking straight at the viewer. Despite the 2D input, the system can rotate the character's face as if it were a 3D object. It also infers how to plausibly close the character's eyes and mouth, taking into account the fact that these facial features may be occluded. As a result, it can be used to generate talking head animations without creating character models, significantly reducing the cost of animation production.</p>
+
+    <p>Another strength of the system is its ease of use. For many previous works, the character being animated is tied to a GAN latent code, making it difficult to customize appearance or to preserve identity as the character moves. On the other hand, my system takes the character image as a direct input and can animate existing characters. Moreover, the character's pose is determined by 6 numerical parameters, allowing it to be controlled by any process that modulates the numbers. I demonstrated controlling characters with UI manipulation and face tracking performed on a live video stream.</p>
+
+    <p>Central to this project's success is a scalable way to generate training data by leveraging downloadable 3D models. Working alone in my free time over the period of 6 months and spending next to no money, I was able to create a large, paired dataset that allows straightforward supervised learning. With high quality training data, I could use relatively simple networks to produce good animations.</p>
+
+    <p>I see applications of the system in VTuber content creation and video game production. I believe this work shows that machine learning can be a useful tool in animation.</p>
+
+    <p>The approach described in this article, of course, has several limitations:</p>
+
+    <ul>
+        <li>The input image must adhere strictly to the specification in Section 4. The character has to stand upright and look straight ahead. Moreover, the image must include the alpha channel. As a result, the system cannot be applied to character images in the wild.</li>
+
+        <li>Currently, the system only knows one way to manipulate the eyes and the mouth: closing them. It would be much more useful if it learns to hallucinate various mouth and eye shapes.</li>
+
+        <li>Generated images are blurry and contain artifacts in disoccluded parts.</li>
+    </ul>
+
+    <p>Lastly, I see many possible directions for future work:</p>
+
+    <ul>
+        <li>Change the training data and process to allow character images in the wild to be animated.</li>
+
+        <li>Fix blurriness and visual artifacts by incorporating generative models.</li>
+
+        <li>Extend the approach to enable incorporating multiple drawings to take advantage of multiple views of the same characters present in almost all character design sheets.</li>
+
+        <li>Enable multiple mouth, eye, and eyebrow shapes in order to make the animation more expressive.</li>
+
+        <li>Make the network recurrent in order to simulate dynamic elements such as hair and cloth movement.</li>
+
+        <li>Infer 2.5D layered models or full 3D models from drawings.</li>
+    </ul>
+
+    <h2>10 &nbsp; Disclaimer</h2><a name="disclaimer"></a>
+
+    <p>
+    While I am an employee of Google Japan, this work is done in my free time without using Google's resource. My day job is writing backends for a part of Google Maps, and I do not belong to any of Google's research organizations. In other words, this project has nothing to do with work. Moreover, I do not list myself as affiliated with Google when publishing this article. What is expressed here is my opinion and should not be considered to be the company's.</p>
+
+    <p>
+    By the terms of my employment, Google may claim rights to the intellectual property of the invention. I am trying to have the copyright to the software assigned to me via an internal review process, and we will see how that goes. I will also try to publish an academic paper out of this.
+    </p>
+
+    <h2>11 &nbsp; Special Thanks</h2>
+
+    <p>I'd like to thank <a href="https://www.linkedin.com/in/aric-bartle-08139840">Aric Bartle</a>, <a href="https://www.linkedin.com/in/worasom">Worasom Kundhikanjana</a>, <a href="http://alantian.net/">Yingtao Tian</a>, <a href="http://www.dmtaub.com/">Daniel M. Taub</a>, and <a href="https://jp.linkedin.com/in/jayakorn-vongkulbhisal-32253849">Jayakorn Vongkulbhisal</a> for their comments and feedbacks.</p>
+
+    <h2>A &nbsp; Network Specifications</h2>
+
+    <h2>A.1 &nbsp; Face Morpher</h2><a name="face-morpher-spec"></a>
+
+    <p>
+    The input image is a 4$\times$256$\times$256 image. (Following Pytorch's convention, the first dimension is the number of channels, the second the height, and the third the width.) The pose vector has 6 dimensions, but we only use 3 dimensions&mdash;the left eye, the right eye, and the mouth&mdash;here because we are only interested in facial expression. Each of the three value is converted to a constant 256$\times$256 image. They are then concatenated with the character image to form a 7$\times$256$\times$256 image. This becomes the input to the network, whose specification is given in the table below.
+    </p>
+    
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Tensors</th>
+                <th scope="col">Shape</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr class="table-primary">
+                <td>
+                    $A_0 = $ input image
+                </td>
+                <td>
+                    4$\times$256$\times$256
+                </td>
+            </tr>
+            <tr class="table-primary">
+                <td>
+                    $A_1 = $ pose image [left eye, right eye, and mouth]
+                </td>
+                <td>
+                    3$\times$256$\times$256
+                </td>
+            </tr>
+            <tr class="table-primary">
+                <td>
+                    $A_2 = \mathrm{Concat}(A_0, A_1)$ 
+                </td>
+                <td>
+                    7$\times$256$\times$256
+                </td>
+            </tr>
+            <tr class="table-warning">
+                <td>
+                    $B_0 = \mathrm{Relu}(\mathrm{InstNorm}(\mathrm{Conv7}(A_2, 64)))$
+                </td>
+                <td>
+                    64$\times$256$\times$256
+                </td>
+            </tr>
+            <tr class="table-warning">
+                <td>
+                    $B_1 = \mathrm{Relu}(\mathrm{InstNorm}(\mathrm{ConvDown}(B_0, 128)))$
+                </td>
+                <td>
+                    128$\times$128$\times$128
+                </td>
+            </tr>
+            <tr class="table-warning">
+                <td>
+                    $B_2 = \mathrm{Relu}(\mathrm{InstNorm}(\mathrm{ConvDown}(B_1, 256)))$
+                </td>
+                <td>
+                    256$\times$64$\times$64
+                </td>
+            </tr>
+            <tr class="table-warning">
+                <td>
+                    $B_3 = \mathrm{Relu}(\mathrm{InstNorm}(\mathrm{ConvDown}(B_2, 512)))$
+                </td>
+                <td>
+                    512$\times$32$\times$32
+                </td>
+            </tr>
+            <tr class="table-success">
+                <td>
+                    $C_0 = \mathrm{ResNetBlock}(B_3)$
+                </td>
+                <td>
+                    512$\times$32$\times$32
+                </td>
+            </tr>
+            <tr class="table-success">
+                <td>
+                    $C_1 = \mathrm{ResNetBlock}(C_0)$
+                </td>
+                <td>
+                    512$\times$32$\times$32
+                </td>
+            </tr>
+            <tr class="table-success">
+                <td>
+                    $C_2 = \mathrm{ResNetBlock}(C_1)$
+                </td>
+                <td>
+                    512$\times$32$\times$32
+                </td>
+            </tr>
+            <tr class="table-success">
+                <td>
+                    $\qquad\qquad\vdots$
+                </td>
+                <td>
+                    $\qquad\vdots$
+                </td>
+            </tr>
+            <tr class="table-success">
+                <td>
+                    $C_5 = \mathrm{ResNetBlock}(C_4)$
+                </td>
+                <td>
+                    512$\times$32$\times$32
+                </td>
+            </tr>
+            <tr class="table-secondary">
+                <td>
+                    $D_0 = \mathrm{Relu}(\mathrm{InstNorm}(\mathrm{ConvTransposeUp}(C_5, 256)))$
+                </td>
+                <td>
+                    256$\times$64$\times$64
+                </td>
+            </tr>
+            <tr class="table-secondary">
+                <td>
+                    $D_1 = \mathrm{Relu}(\mathrm{InstNorm}(\mathrm{ConvTransposeUp}(D_0, 128)))$
+                </td>
+                <td>
+                    128$\times$128$\times$128
+                </td>
+            </tr>
+            <tr class="table-secondary">
+                <td>
+                    $D_2 = \mathrm{Relu}(\mathrm{InstNorm}(\mathrm{ConvTransposeUp}(D_1, 64)))$
+                </td>
+                <td>
+                    64$\times$256$\times$256
+                </td>
+            </tr>
+            <tr class="table-danger">
+                <td>
+                    $E_0 = \mathrm{Tanh}(\mathrm{Conv7}(D_2, 4))$
+                    [change image]
+                </td>
+                <td>
+                    4$\times$256$\times$256
+                </td>
+            </tr>
+            <tr class="table-danger">
+                <td>
+                    $E_1 = \mathrm{Sigmoid}(\mathrm{Conv7}(D_2, 4)) $
+                    [alpha mask]
+                </td>
+                <td>
+                    4$\times$256$\times$256
+                </td>
+            </tr>
+            <tr class="table-danger">
+                <td>
+                    $E_2 = A_0 \cdot E_0 + E_1 \cdot (1 - E_0)$ [output]
+                </td>
+                <td>
+                    4$\times$256$\times$256
+                </td>
+            </tr>
+        </tbody>
+    </table>    
+    <p align="center"><b>Table AA.</b> Architecture of the face morpher.</p>
+
+    <p>
+        Let $X$ denote an input tensor and $c$ denote the number of channels in the output. Some of the operations in Table 6B are defined as follows:
+    </p>
+    <ul>
+        <li>$\mathrm{InstNorm}(X)$ denotes the instance normalization unit <a href="#fn_ulyanov_2016">[Ulyanov et al. 2016]</a>. </li>
+        <li>$\mathrm{Conv7}(X, c)$ denotes a convolution with a 7$\times$7 kernel with stride of 1 pixel and padding of 3 pixels.</li>
+
+        <li>$\mathrm{ConvDown}(X, c)$ denotes a convolution with a 4$\times$4 kernel with stride of 2 pixels and padding of 1 pixel. The convolution downsamples the image by a factory of 2.</li>
+
+        <li>$\mathrm{ConvTransposeUp}(X, c)$ denotes a transposed convolution with a 4$\times$4 kernel with stride of 2 pixels and padding of 1 pixel. The convolution upsamples the image by a factory of 2.</li>
+
+        <li>$\mathrm{ResNetBlock}(X)$ denotes a residual block similar to the one describe in the ResNet paper <a href="#fn_he_2016">[He et al. 2016]</a>. I use the version Pumarola et al. use, and the block is defined as:
+        $$\mathrm{ResnetBlock(X)} = X + \mathrm{InstNorm}(\mathrm{Conv3}(\mathrm{Relu}(\mathrm{InstNorm}(\mathrm{Conv3}(X)))))$$
+        where $\mathrm{Conv3}$ denotes a convolution with a 3$\times$3 kernel with stride and padding of $1$ pixel. The number of channels is preserved by this convolution.
+        </li>
+    </ul>
+
+    <div class='footnotes'>
+        <ul>
+            <li class='footnote' id="fn_ulyanov_2016">
+                Dmitry Ulyanov, Andrea Vedaldi, and Victor Lempitsky.
+                <b>Instance Normalization: The Missing Ingredient for Fast Stylization.</b>
+                <a href="https://arxiv.org/abs/1607.08022">[arXiv]</a>
+            </li>
+            <li class='footnote' id="fn_he_2016">
+                Kaiming He, Xiangyu Zhang, Shaoqing Ren, and Jian Sun.
+                <b>Deep Residual Learning for Image Recognition.</b>
+                CVPR 2016.
+                <a href="https://arxiv.org/abs/1512.03385">[arXiv]</a>
+            </li>
+        </ul>
+    </div>
+
+    <h3>A.2 &nbsp; Two-Algorithm Face Rotator</h3><a name="two-algo-face-rotator"></a>
+
+    <p>The two-algorithm face rotator is almost the same as the face morpher. There are two main differences. First, instead of taking components related to facial expression of the pose vector as input, it takes the components that control face rotation. Second, there is an extra output pathway corresponding to Zhou et al.'s algorithm.</p>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Tensors</th>
+                <th scope="col">Shape</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr class="table-primary">
+                <td>
+                    $A_0 = $ input image = output of the face morpher
+                </td>
+                <td>
+                    4$\times$256$\times$256
+                </td>
+            </tr>
+            <tr class="table-primary">
+                <td>
+                    $A_1 = $ pose image [neck tip $x$-rotation, neck tip $y$-rotation, and neck root $z$-rotation)
+                </td>
+                <td>
+                    3$\times$256$\times$256
+                </td>
+            </tr>
+            <tr class="table-primary">
+                <td>
+                    $A_2 = \mathrm{Concat}(A_0, A_1)$ 
+                </td>
+                <td>
+                    7$\times$256$\times$256
+                </td>
+            </tr>
+            <tr class="table-warning">
+                <td colspan="2" align="center">
+                    Same as the yellow section of Table AA.
+                </td>
+            </tr>
+            <tr class="table-success">
+                <td colspan="2" align="center">
+                    Same as the green section of Table AA.
+                </td>
+            </tr>
+            <tr class="table-secondary">
+                <td colspan="2" align="center">
+                    Same as the grey section of Table AA.
+                </td>
+            </tr>
+            <tr class="table-danger">
+                <td>
+                    $E_0 = \mathrm{Tanh}(\mathrm{Conv7}(D_2, 4))$
+                    [Pumarola et al. pathway's change image]
+                </td>
+                <td>
+                    4$\times$256$\times$256
+                </td>
+            </tr>
+            <tr class="table-danger">
+                <td>
+                    $E_1 = \mathrm{Sigmoid}(\mathrm{Conv7}(D_2, 4)) $
+                    [Pumuarola et al. pathway's alpha mask]
+                </td>
+                <td>
+                    4$\times$256$\times$256
+                </td>
+            </tr>
+            <tr class="table-danger">
+                <td>
+                    $E_2 = A_0 \cdot E_0 + E_1 \cdot (1 - E_0)$ [Pumarola et al. pathway's output]
+                </td>
+                <td>
+                    4$\times$256$\times$256
+                </td>
+            </tr>
+            <tr class="table-danger">
+                <td>
+                    $E_3 = \mathrm{Conv7}(D_2, 2) + \mathrm{IdentityAppearanceFlow}$<br>[Zhou et al.'s pathway appearance flow]
+                </td>
+                <td>
+                    2$\times$256$\times$256
+                </td>
+            </tr>
+            <tr class="table-danger">
+                <td>
+                    $E_4 = \mathrm{BilinearSample}(A_0, E_3)$ [Zhou et al.'s pathway output] 
+                </td>
+                <td>
+                    4$\times$256$\times$256
+                </td>
+            </tr>
+        </tbody>
+    </table>    
+    <p align="center"><b>Table AB.</b> Architecture of the two-algorithm face rotator.</p>
+
+    <p>As stated earlier, an appearance flow specifies, for each pixel in the output image, which pixel in the input image should be sampled from. Hence, it requires two numbers (the $x$- and $y$-coordinates of the pixel to copy from) for each pixel in the output image. These data are encoded as a 2$\times$256$\times$256 tensor.</p>
+
+    <p>In my implementation, the appearance flow (i.e., $E_3$) is not computed directly. I have the network output offsets to the map that, for each output pixel, copies from the same pixel location. This map is denoted by $\mathrm{IdentityAppearanceFlow}$ in Table AB. I did this because most pixels do not change under face rotation. Having the network learn to output zero offsets for unchanging pixels is easier than having it output equally-spaced pixel coordinates.</p>
+
+    <p>Lastly, the $\mathrm{BilinearSample}(\cdot,\cdot)$ function samples with bilinear interpolation the pixels of the first argument according to the appearance flow given as the second argument. The details of this operation can be found in the Spatial Transformer paper <a href="#fn_jadeberg_2015_1">[Jadeberg et al. 2015]</a>.</p>
+
+    <div class="footnotes"><ul><li class="footnote" id="fn_jadeberg_2015_1"><p align="left">
+    Max Jaderberg, Karen Simonyan, Andrew Zisserman, Koray Kavukcuoglu.
+    <b>Spatial Transformer Networks.</b>
+    NIPS 2015.
+    <a href="http:s//arxiv.org/abs/1506.02025">[arXiv]</a>
+    </p></li></ul></div>
+
+    <h3>A.3 &nbsp; Combiner</h3><a name="combiner"></a>
+
+    <p>The combiner uses U-Net instead of the encoder-encoder architecture. It computes two alpha masks: one for merging the outputs of Pumarola et al.'s and Zhou et al.'s pathways and the other for performing the final output retouching.</p>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Tensors</th>
+                <th scope="col">Shape</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr class="table-primary">
+                <td>
+                    $A_0 = $ Pumarola et al.'s pathway's output
+                </td>
+                <td>
+                    4$\times$256$\times$256
+                </td>
+            </tr>
+            <tr class='table-primary'>
+                <td>
+                    $A_1 = $ Zhou et al.'s pathway's output
+                </td>
+                <td>
+                    4$\times$256$\times$256
+                </td>
+            </tr>
+            <tr class="table-primary">
+                <td>
+                    $A_2 = $ pose image [neck tip $x$-rotation, neck tip $y$-rotation, and neck root $z$-rotation]
+                </td>
+                <td>
+                    3$\times$256$\times$256
+                </td>
+            </tr>
+            <tr class="table-primary">
+                <td>
+                    $A_3 = \mathrm{Concat}(A_0, A_1, A_2)$ 
+                </td>
+                <td>
+                    11$\times$256$\times$256
+                </td>
+            </tr>
+            <tr class="table-warning">
+                <td>
+                    $B_0 = \mathrm{Relu}(\mathrm{InstNorm}(\mathrm{Conv7}(A_3, 64)))$
+                </td>
+                <td>
+                    64$\times$256$\times$256
+                </td>
+            </tr>
+            <tr class="table-warning">
+                <td>
+                    $B_1 = \mathrm{Relu}(\mathrm{InstNorm}(\mathrm{ConvDown}(B_0, 128)))$
+                </td>
+                <td>
+                    128$\times$128$\times$128
+                </td>
+            </tr>
+            <tr class="table-warning">
+                <td>
+                    $B_2 = \mathrm{Relu}(\mathrm{InstNorm}(\mathrm{ConvDown}(B_1, 256)))$
+                </td>
+                <td>
+                    256$\times$64$\times$64
+                </td>
+            </tr>
+            <tr class="table-warning">
+                <td>
+                    $B_3 = \mathrm{Relu}(\mathrm{InstNorm}(\mathrm{ConvDown}(B_2, 512)))$
+                </td>
+                <td>
+                    512$\times$32$\times$32
+                </td>
+            </tr>
+            <tr class="table-success">
+                <td>
+                    $C_0 = \mathrm{ResNetBlock}(B_3)$
+                </td>
+                <td>
+                    512$\times$32$\times$32
+                </td>
+            </tr>
+            <tr class="table-success">
+                <td>
+                    $C_1 = \mathrm{ResNetBlock}(C_0)$
+                </td>
+                <td>
+                    512$\times$32$\times$32
+                </td>
+            </tr>
+            <tr class="table-success">
+                <td>
+                    $C_2 = \mathrm{ResNetBlock}(C_1)$
+                </td>
+                <td>
+                    512$\times$32$\times$32
+                </td>
+            </tr>
+            <tr class="table-success">
+                <td>
+                    $\qquad\qquad\vdots$
+                </td>
+                <td>
+                    $\qquad\vdots$
+                </td>
+            </tr>
+            <tr class="table-success">
+                <td>
+                    $C_5 = \mathrm{ResNetBlock}(C_4)$
+                </td>
+                <td>
+                    512$\times$32$\times$32
+                </td>
+            </tr>
+            <tr class="table-secondary">
+                <td>
+                    $D_0 = \mathrm{Relu}(\mathrm{InstNorm}(\mathrm{ConvTransposeUp}(C_5, 256)))$
+                </td>
+                <td>
+                    256$\times$64$\times$64
+                </td>
+            </tr>
+            <tr class="table-secondary">
+                <td>
+                    $D_1 = \mathrm{Concat}(D_0, B_2)$ [U-Net's skip connection]
+                </td>
+                <td>
+                    512$\times$64$\times$64
+                </td>
+            </tr>
+            <tr class="table-secondary">
+                <td>
+                    $D_2 = \mathrm{Relu}(\mathrm{InstNorm}(\mathrm{ConvTransposeUp}(D_1, 128)))$
+                </td>
+                <td>
+                    128$\times$128$\times$128
+                </td>
+            </tr>
+            <tr class="table-secondary">
+                <td>
+                    $D_3 = \mathrm{Concat}(D_2, B_1)$ [U-Net's skip connection]
+                </td>
+                <td>
+                    256$\times$128$\times$128
+                </td>
+            </tr>
+            <tr class="table-secondary">
+                <td>
+                    $D_4 = \mathrm{Relu}(\mathrm{InstNorm}(\mathrm{ConvTransposeUp}(D_3, 64)))$
+                </td>
+                <td>
+                    64$\times$256$\times$256
+                </td>
+            </tr>
+            <tr class="table-secondary">
+                <td>
+                    $D_5 = \mathrm{Concat}(D_4,B_0)$ [U-Net's skip connection]
+                </td>
+                <td>
+                    128$\times$256$\times$256
+                </td>
+            </tr>
+            <tr class="table-secondary">
+                <td>
+                    $D_6 = \mathrm{Relu}(\mathrm{InstNorm}(\mathrm{ConvTransposeUp}(D_5, 64)))$
+                </td>
+                <td>
+                    64$\times$256$\times$256
+                </td>
+            </tr>
+            <tr class="table-danger">
+                <td>
+                    $E_0 = \mathrm{Sigmoid}(\mathrm{Conv7}(D_6, 4))$
+                    [combining alpha mask]
+                </td>
+                <td>
+                    4$\times$256$\times$256
+                </td>
+            </tr>
+            <tr class="table-danger">
+                <td>
+                    $E_1 = \mathrm{Tanh}(\mathrm{Conv7}(D_6, 4)) $
+                    [change for retouching]
+                </td>
+                <td>
+                    4$\times$256$\times$256
+                </td>
+            </tr>
+            <tr class="table-danger">
+                <td>
+                    $E_2 = \mathrm{Sigmoid}(\mathrm{Conv7}(D_6, 4))$
+                    [retouch alpha mask]
+                </td>
+                <td>
+                    4$\times$256$\times$256
+                </td>
+            </tr>
+            <tr class="table-danger">
+                <td>
+                    $E_3 = A_0 \cdot E_0 + A_1 \cdot (1 - E_0)$ [combined image]
+                </td>
+                <td>
+                    4$\times$256$\times$256
+                </td>
+            </tr>
+            <tr class="table-danger">
+                <td>
+                    $E_4 = E_3 \cdot E_2 + E_1 \cdot (1 - E_2)$ [output]
+                </td>
+                <td>
+                    4$\times$256$\times$256
+                </td>
+            </tr>
+        </tbody>
+    </table>    
+    <p align="center"><b>Table AC.</b> Architecture of the combiner.</p>
+
+    <h1>B Video Viewers</h1>
+
+    <h2>B.1 Videos of Selected Characters in the Test Set</h2><a name="test-videos-viewer"></a>
+
+    <table class="table table-bordered">
+        <tr>
+            <td align="center" colspan="4">
+                <video id="testVideoLeft" mediagroup="videoCompare" loop src="data/videos/yozakura_tama/ground_truth/video.webm" type="video/webm">
+                </video>
+                <video id="testVideoRight" mediagroup="videoCompare" loop src="data/videos/yozakura_tama/fu_p_l1/video.webm" type="video/webm">                     
+                </video>
+                <br>
+                Click any of the videos to play/pause.
+            </td>
+        </tr>        
+        <tr>
+            <td align="right">
+                <b>Configuration (left):</b> 
+            </td>
+            <td>
+                <select id="testConfigLeft">
+                    <option value="ground_truth" selected="selected">Ground Truth</option>
+                    <option value="pu_l1">PU-L1</option>
+                    <option value="pu_p">PU-P</option>
+                    <option value="zh_l1">ZH-L1</option>
+                    <option value="zh_p">ZH-P</option>
+                    <option value="fu_l1_l1">FU-L1-L1</option>
+                    <option value="fu_l1_p">FU-L1-P</option>
+                    <option value="fu_p_l1">FU-P-L1</option>
+                    <option value="fu_p_p">FU-P-P</option>
+                </select>
+            </td>
+            <td align="right">
+                <b>Configuration (right):</b> 
+            </td>
+            <td>
+                <select id="testConfigRight">
+                    <option value="ground_truth">Ground Truth</option>
+                    <option value="pu_l1">PU-L1</option>
+                    <option value="pu_p">PU-P</option>
+                    <option value="zh_l1">ZH-L1</option>
+                    <option value="zh_p">ZH-P</option>
+                    <option value="fu_l1_l1">FU-L1-L1</option>
+                    <option value="fu_l1_p">FU-L1-P</option>
+                    <option value="fu_p_l1" selected="selected">FU-P-L1</option>
+                    <option value="fu_p_p">FU-P-P</option>
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td align="right">
+                <b>Character:</b>
+            </td>
+            <td colspan="3">
+                <select id="testCharacterName">
+                    <option value="yozakura_tama" selected="selected">Yozakura Tama</option>
+                    <option value="kongou_iroha">Kongou Iroha</option>
+                    <option value="kiso_azuki">Kiso Azuki</option>
+                    <option value="yamato_iori">Yamato Iori</option>
+                    <option value="tokino_sora">Tokino Sora</option>
+                    <option value="weatheroid_airi">Weatheroid Airi</option>
+                    <option value="shibuya_haru">Shibuya Haru</option>
+                    <option value="akiyama_rentarou">Akiyama Rentarou</option>
+                </select>
+            </td>
+        </tr>
+    </table>
+
+    <p><b>Note:</b> The ground truth videos were generated by rendering the 3D models directly.</p>
+
+    <h2>B.2 Videos of Drawn Characters</h2><a name="drawing-videos-viewer"></a>
+
+    <table class="table table-bordered">
+        <tr>
+            <td  align="center" colspan="4">
+                <video id="drawingVideo" src="data/videos/ange_katrina/fu_p_p/video.webm" loop type="video/webm"></video>
+                <br>
+                Click video to play/pause.
+            </td>
+        </tr>
+        <tr>
+            <td align="right">
+                <b>Character:</b>
+            </td>
+            <td>
+                <select id="drawingCharacter">
+                    <optgroup label="Nijisanji">
+                        <option value="ange_katrina" selected="selected">Ange Katrina</option>
+                        <option value="ars_almal">Ars Almal</option>
+                        <option value="elu">Elu the Elf</option>
+                        <option value="eudric">Eudric</option>
+                        <option value="ex_albio">Ex Albio</option>
+                        <option value="gilzaren_iii">Gilzaren III</option>
+                        <option value="gundou_mirei">Gundou Mirei</option>
+                        <option value="hakase_fuyuki">Hakase Fuyuki</option>
+                        <option value="harusaki_air">Harusaki Air</option>
+                        <option value="hassaku_yuzu">Hassaku Yuzu</option>
+                        <option value="higuchi_kaede">Higuchi Kaede</option>
+                        <option value="honma_himawari">Honma Himawari</option>
+                        <option value="inui_toko">Inui Toko</option>
+                        <option value="joe_rikiichi">Joe Rikiichi</option>
+                        <option value="kagami_hayato">Kagami Hayato</option>
+                        <option value="lize_helesta">Lize Helesta</option>
+                        <option value="machita_chima">Machita Chima</option>
+                        <option value="maimoto_keisuke">Maimoto Keisuke</option>
+                        <option value="makaino_lilim">Makaino Lilim</option>
+                        <option value="mayuzumi_kai">Mayuzumi Kai</option>
+                        <option value="nui_sociere">Nui Sociere</option>
+                        <option value="onomachi_haruka">Onomachi Haruka</option>
+                        <option value="otogibara_era">Otogibara Era</option>
+                        <option value="rindou_mikoto">Rindou Mikoto</option>
+                        <option value="sakura_ritsuki">Sakura Ritsuki</option>
+                        <option value="sasaki_saku">Sasaki Saku</option>
+                        <option value="setsuna">Setsuna</option>
+                        <option value="shellin_burgundy">Shellin Burgundy</option>
+                        <option value="shiina_yuika">Shiina Yuika</option>
+                        <option value="shizuka_rin">Shizuka Rin</option>
+                        <option value="sukoya_kana">Sukoya Kana</option>
+                        <option value="suzuhara_lulu">Suzuhara Lulu</option>
+                        <option value="suzuka_utako">Suzuka Utako</option>
+                        <option value="takamiya_rion">Takamiya Rion</option>
+                        <option value="tsukino_mito">Tsukino Mito</option>
+                        <option value="ushimi_ichigo">Ushimi Ichigo</option>
+                        <option value="warabeda_meiji">Warabeda Meiji</option>
+                        <option value="yashiro_kizuku">Yashiro Kizuku</option>
+                        <option value="yorumi_rena">Yorumi Rena</option>
+                        <option value="yumeoi_kakeru">Yumeoi Kakeru</option>
+                        <option value="yuzuki_roa">Yuzuki Roa</option>
+                    </optgroup>
+                    <optgroup label="Waifu Labs">
+                        <option value="waifu_00">Waifu #0</option>
+                        <option value="waifu_01">Waifu #1</option>
+                        <option value="waifu_02">Waifu #2</option>
+                        <option value="waifu_03">Waifu #3</option>
+                        <option value="waifu_04">Waifu #4</option>                        
+                    </optgroup>
+                </select>
+            </td>
+            <td align="right">
+                <b>Configuration:</b>
+            </td>
+            <td>
+                <select id="drawingConfig">
+                    <option value="fu_p_l1">FU-P-L1</option>
+                    <option value="fu_p_p" selected="selected">FU-P-P</option>
+                </select>
+            </td>
+        </tr>
+    </table>
+
+    <div class="page-header"></div>
+    <p>Last modified: 2019/11/25</p>
+</div>
+
+<script type="text/javascript">
+    var isTestVideosPlaying = false;
+
+    function updateTestVideos() {
+        var testConfigLeft = $("#testConfigLeft").val();
+        var testConfigRight = $("#testConfigRight").val();
+        var testCharacterName = $("#testCharacterName").val();
+
+        var testVideoLeft = $("#testVideoLeft");
+        var testVideoRight = $("#testVideoRight");
+        var oldTime = testVideoLeft.get(0).currentTime;
+
+        var testVideoLeftSrc = "data/videos/" + testCharacterName + "/" + testConfigLeft + "/video.webm";
+        
+        testVideoLeft.prop("src", testVideoLeftSrc);        
+
+        var testVideoRightSrc = "data/videos/" + testCharacterName + "/" + testConfigRight + "/video.webm";
+        
+        testVideoRight.prop("src", testVideoRightSrc);        
+
+        testVideoLeft.get(0).currentTime = oldTime;
+        testVideoRight.get(0).currentTime = oldTime;
+    }
+
+    function playTestVideos() {
+        $("#testConfigLeft").prop("disabled", true);
+        $("#testConfigRight").prop("disabled", true);
+        $("#testCharacterName").prop("disabled", true);
+        var testVideoLeft = $("#testVideoLeft").get(0);
+        var testVideoRight = $("#testVideoRight").get(0);
+        testVideoLeft.play();
+        testVideoRight.play();
+        isTestVideosPlaying = true;
+    }
+
+    function pauseTestVideos() {
+        $("#testConfigLeft").prop("disabled", false);
+        $("#testConfigRight").prop("disabled", false);
+        $("#testCharacterName").prop("disabled", false);
+        var testVideoLeft = $("#testVideoLeft").get(0);
+        var testVideoRight = $("#testVideoRight").get(0);
+        testVideoLeft.pause();
+        testVideoRight.pause();
+        isTestVideosPlaying = false;
+    }
+
+    function playPauseTestVideos() {                    
+        if (isTestVideosPlaying) {                        
+            pauseTestVideos();
+        } else {            
+            playTestVideos();
+        }
+    }
+
+    $("#testVideoLeft").click(playPauseTestVideos);
+    $("#testVideoRight").click(playPauseTestVideos);
+
+    $("#testConfigLeft").change(updateTestVideos);
+    $("#testConfigRight").change(updateTestVideos);
+    $("#testCharacterName").change(updateTestVideos);
+
+    var isDrawingVideoPlaying = false;
+
+    function updateDrawingVideo() {
+        var drawingConfig = $("#drawingConfig").val();        
+        var drawingCharacterName = $("#drawingCharacter").val();
+        var drawingVideoSrc = "data/videos/" + drawingCharacterName + "/" + drawingConfig + "/video.webm"        
+        
+        var drawingVideo = $("#drawingVideo");
+        var oldCurrentTime = drawingVideo.get(0).currentTime;
+        drawingVideo.prop("src", drawingVideoSrc);        
+
+        drawingVideo.get(0).currentTime = oldCurrentTime;
+        isTestVideosPlaying = false;
+    }    
+
+    $("#drawingConfig").change(updateDrawingVideo);
+    $("#drawingCharacter").change(updateDrawingVideo);
+    $("#drawingVideo").click(function() {
+        if (isTestVideosPlaying) {
+            $("#drawingVideo").get(0).pause();
+            isTestVideosPlaying = false;
+            $("#drawingConfig").prop("disabled", false);
+            $("#drawingCharacter").prop("disabled", false);
+        } else {
+            $("#drawingVideo").get(0).play();
+            isTestVideosPlaying = true;
+            $("#drawingConfig").prop("disabled", true);
+            $("#drawingCharacter").prop("disabled", true);
+        }
+    });
+
+    var modelNames = [
+        "yozakura_tama",
+        "kongou_iroha",
+        "kiso_azuki",
+        "yamato_iori",
+        "tokino_sora",
+        "weatheroid_airi",
+        "shibuya_haru",
+        "akiyama_rentarou",
+    ];
+
+    var testVideosText = "";
+    for (var i=0; i < modelNames.length; i++) {
+        var modelName = modelNames[i];
+        testVideosText += "<video id='" + modelName + "_video' width='140' height='140' src='data/videos/" 
+            + modelName + "/fu_p_p/video.webm' loop type='video/webm' muted autoplay playsinline loop></video>";
+        testVideosText += " ";
+    }
+    $("#testVideos").html(testVideosText);
+    
+    var charNames = [
+        //"ange_katrina",
+        //"ars_almal",
+        //"elu",
+        "eudric",
+        //"ex_albio",
+        //"gilzaren_iii",
+        //"gundou_mirei",
+        "hakase_fuyuki",
+        //"harusaki_air",
+        //"hassaku_yuzu",
+        //"higuchi_kaede",
+        //"honma_himawari",
+        //"inui_toko",
+        //"joe_rikiichi",
+        "kagami_hayato",
+        //"lize_helesta",
+        //"machita_chima",
+        "maimoto_keisuke",
+        //"makaino_lilim",
+        //"mayuzumi_kai",
+        "nui_sociere",
+        "onomachi_haruka",
+        "otogibara_era",
+        "rindou_mikoto",
+        "sakura_ritsuki",
+        //"sasaki_saku",
+        //"setsuna",
+        //"shellin_burgundy",
+        //"shiina_yuika",
+        //"shizuka_rin",
+        //"sukoya_kana",
+        //"suzuhara_lulu",
+        //"suzuka_utako",
+        "takamiya_rion",
+        "tsukino_mito",
+        //"ushimi_ichigo",
+        //"warabeda_meiji",
+        "yashiro_kizuku",
+        "yorumi_rena",
+        //"yuzuki_roa",
+        //"waifu_00",
+        //"waifu_01",
+        "waifu_02",
+        "waifu_03",
+        "waifu_04",
+    ];
+    
+    var drawingVideosText = "";
+    for (var i=0; i < charNames.length; i++) {
+        var charName = charNames[i];
+        drawingVideosText += "<video id='" + charName + "_video' width='140' height='140' src='data/videos/" 
+            + charName + "/fu_p_p/video.webm' loop type='video/webm' muted autoplay playsinline loop></video>";        
+        drawingVideosText += " ";
+    }
+    $("#drawingVideos").html(drawingVideosText);    
+
+    $.bigfoot();
+</script>
+
+</body>
+</html>
