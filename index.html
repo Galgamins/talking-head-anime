@@ -743,7 +743,7 @@ The characters are virtual YouTubers affiliated with <a href="https://nijisanji.
     </ul>
 
     <p>
-        Again, I trained the network with Adam, using the same hyper parameters as those of the face morpher, and for 6 epochs (3,000,000 examples). When using the L1 loss, I set the batch size to 25, and training again took about 2 days. However, because evaluating the feature reconstruction loss requires much more memory, I had to reduced the batch size to 8 when training with the perceptual loss. Training took 6 days in this case.
+        Again, I trained the network with Adam, using the same hyper parameters as those of the face morpher. When using the L1 loss, I set the batch size to 25 and trained and for 6 epochs (3,000,000 examples). Training again took about 2 days. However, because evaluating the feature reconstruction loss requires much more memory, I had to reduced the batch size to 8 when training with the perceptual loss. I also found that, staring from a randomized state, training with both the L1 and the perceptual loss terms lead to instability. As a result, I started with the state after being trained with only the L1 term for half an epoch (obtained from a snapshot of training with only the L1 loss), and trained with the full perceptual loss for 6 epochs. Training took 6 days in this case.
     </p>
 
     <h4>6.2.2 &nbsp; Combiner</h4>
@@ -2464,7 +2464,7 @@ The characters are virtual YouTubers affiliated with <a href="https://nijisanji.
         </ul>
     </div>
 
-    <p><b>Animating human images.</b> Creating animation from a single or a few human images has been researched extensively by the graphics and vision communities, and much progress was made recently thanks to deep learning. These works typically seek to make the human in a given "target" image or video imitate the action of another human in a separate "driving" video. Chan et al. devise a pipeline to make the target person imitate the full-body dance moves of the driving video <a href="#fn_chan_2019">[Chan et al. 2019]</a>. It makes extensive use of neural pose estimation and requires a video of the target person in the training phase. Zakharov et al. train embedder network to map one or several target images into a latent code, which is used to control a generator network to translates a facial landmark image so that it has the face of the target human <a href="#fn_zakharov_2019">[Zakarov et al. 2019]</a>.  Wang et al. propose a general framework for video translation in which target images are transformed to weights of a part of an image generation network <a href="#fn_wang_2019">[Wang et al. 2019]</a>. Their approach can transfer facial expressions as well as full-body poses. Note that these works solve problems that are different from mine because their source of movement is the driving video rather than a sequence of abstract parameters.</p>
+    <p><b>Animating human images.</b> Creating animation from a single or a few human images has been researched extensively by the graphics and vision communities, and much progress was made recently thanks to deep learning. These works typically seek to make the human in a given "target" image or video imitate the action of another human in a separate "driving" video. Chan et al. devise a pipeline to make the target person imitate the full-body dance moves of the driving video <a href="#fn_chan_2019">[Chan et al. 2019]</a>. It makes extensive use of neural pose estimation and requires a video of the target person in the training phase. Zakharov et al. train an embedder network to map one or several target images into a latent code, which is used to control a generator network to translates a facial landmark image so that it has the face of the target human <a href="#fn_zakharov_2019">[Zakarov et al. 2019]</a>.  Wang et al. propose a general framework for video translation in which target images are transformed to weights of a part of an image generation network <a href="#fn_wang_2019">[Wang et al. 2019]</a>. Their approach can transfer facial expressions as well as full-body poses. Note that these works solve problems that are different from mine because their source of movement is the driving video rather than a sequence of abstract parameters.</p>
 
     <div class="footnotes">
         <ul>
@@ -3083,9 +3083,9 @@ The characters are virtual YouTubers affiliated with <a href="https://nijisanji.
     </table>    
     <p align="center"><b>Table AC.</b> Architecture of the combiner.</p>
 
-    <h1>B Video Viewers</h1>
+    <h1>B &nbsp; Video Viewers</h1>
 
-    <h2>B.1 Videos of Selected Characters in the Test Set</h2><a name="test-videos-viewer"></a>
+    <h2>B.1 &nbsp; Videos of Selected Characters in the Test Set</h2><a name="test-videos-viewer"></a>
 
     <table class="table table-bordered">
         <tr>
@@ -3153,7 +3153,7 @@ The characters are virtual YouTubers affiliated with <a href="https://nijisanji.
 
     <p><b>Note:</b> The ground truth videos were generated by rendering the 3D models directly.</p>
 
-    <h2>B.2 Videos of Drawn Characters</h2><a name="drawing-videos-viewer"></a>
+    <h2>B.2 &nbss; Videos of Drawn Characters</h2><a name="drawing-videos-viewer"></a>
 
     <table class="table table-bordered">
         <tr>
@@ -3233,8 +3233,14 @@ The characters are virtual YouTubers affiliated with <a href="https://nijisanji.
         </tr>
     </table>
 
-    <div class="page-header"></div>
-    <p>Last modified: 2019/11/25</p>
+    <hr>
+    <b>Update History</b>
+
+    <ul>
+        <li>2020/01/11: Updated how the two-algo face rotater is trained. The one that are trained with the perceptual loss does not start training with the full perceptual loss from scratch. Instead, for the first half epoch (250,000 images), it was trained with only the L1 loss. Then, for 6 more epochs, both the L1 and the perceptual terms ared used together.</li>
+
+        <li>2019/11/26: First publication.</li>
+    </ul>
 </div>
 
 <script type="text/javascript">
