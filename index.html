@@ -745,7 +745,7 @@ The characters are virtual YouTubers affiliated with <a href="https://nijisanji.
     </ul>
 
     <p>
-        Again, I trained the network with Adam, using the same hyper parameters as those of the face morpher. When using the L1 loss, I set the batch size to 25 and trained and for 6 epochs (3,000,000 examples). Training again took about 2 days. However, because evaluating the feature reconstruction loss requires much more memory, I had to reduced the batch size to 8 when training with the perceptual loss. I also found that, staring from a randomized state, training with both the L1 and the perceptual loss terms lead to instability. As a result, I started with the state after being trained with only the L1 term for half an epoch (obtained from a snapshot of training with only the L1 loss), and trained with the full perceptual loss for 6 epochs. Training took 6 days in this case.
+        Again, I trained the network with Adam, using the same hyperparameters as those of the face morpher. When using the L1 loss, I set the batch size to 25 and trained and for 6 epochs (3,000,000 examples). Training again took about 2 days. However, because evaluating the feature reconstruction loss requires much more memory, I had to reduced the batch size to 8 when training with the perceptual loss. I also found that, staring from a randomized state, training with both the L1 and the perceptual loss terms lead to instability. As a result, I started with the state after being trained with only the L1 term for half an epoch (obtained from a snapshot of training with only the L1 loss), and trained with the full perceptual loss for 6 epochs. Training took 6 days in this case.
     </p>
 
     <h4>6.2.2 &nbsp; Combiner</h4>
