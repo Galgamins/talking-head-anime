@@ -560,7 +560,7 @@ The characters are virtual YouTubers affiliated with <a href="https://nijisanji.
         As discussed in the Overview section, my neural network system consists of many subnetworks. I'll now describe them in details.
     </p>
 
-    <h3>6.1 &nbsp; Face Morpher</h3>
+    <h3>6.1 &nbsp; Face Morpher</h3><a name="face-morpher"></a>
 
     <p>
         The first step to pose a character's face is to modify its facial features. More specifically, we need to close its eyes and mouth.
@@ -620,7 +620,7 @@ The characters are virtual YouTubers affiliated with <a href="https://nijisanji.
     <p>I optimized the network with the Adam algorithm using the same setting as Pumarola et al.'s: learning rate of $1^{-4}$, $\beta_1 = 0.5$, $\beta_2 = 0.999$, and batch size of 25. The network was trained for 6 epochs (3,000,000 examples), taking about 2 days with my GeForce GTX 1080 Ti GPU.</p>
 
 
-    <h3>6.2 &nbsp; Face Rotator</h3>
+    <h3>6.2 &nbsp; Face Rotator</h3><a name="face-rotator"></a>
 
     <p>The face rotator consists of two subnetworks. The <i>two-algorithm rotator</i> rotates the character's face with two different algorithms, each with its own strength and weakness. To combine their strength, the <i>combiner</i> takes the two output images, blends them together with an alpha mask, and also retouches the image to improve quality.</p>    
 
