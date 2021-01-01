@@ -402,6 +402,7 @@ The characters are virtual YouTubers affiliated with <a href="https://nijisanji.
         Another important part of the training data is the pose, which I need to specify one for every training example. I generated poses by sampling each component of the pose vector independently. For the eye and mouth controlling parameters, I sample them uniformly from the $[0,1]$ interval. For the head joint parameters, I sampled from a probability distribution whose density grows linearly from the center of the range (i.e., $0$) to the extreme values (i.e., $-1$ and $1$). The density is depicted in the figure below:
     </p>
 
+    <a name="joint-parameter-distribution"></a>
     <p align="center">
         <img src="data/joint-parameter-distribution.png">
         <br/>
