@@ -412,6 +412,7 @@ The characters are virtual YouTubers affiliated with <a href="https://nijisanji.
         I chose this distribution to increase the frequency of hard training examples: when some head joint parameters are far from $0$, there would be a large difference between the head configuration and that of the rest pose. I believe that forcing the network to solve challenging problems from the get-go would make it perform better in general.
     </p>
 
+    <a name="#rendering"></a>
     <h3>5.3 &nbsp; Rendering</h3>
 
     <p>
@@ -2457,7 +2458,7 @@ The characters are virtual YouTubers affiliated with <a href="https://nijisanji.
         </ul>
     </div>
 
-    <p><b>Animating human images.</b> Creating animation from a single or a few human images has been researched extensively by the graphics and vision communities, and much progress was made recently thanks to deep learning. These works typically seek to make the human in a given "target" image or video imitate the action of another human in a separate "driving" video. Chan et al. devise a pipeline to make the target person imitate the full-body dance moves of the driving video <a href="#fn_chan_2019">[Chan et al. 2019]</a>. It makes extensive use of neural pose estimation and requires a video of the target person in the training phase. Zakharov et al. train an embedder network to map one or several target images into a latent code, which is used to control a generator network to translates a facial landmark image so that it has the face of the target human <a href="#fn_zakharov_2019">[Zakarov et al. 2019]</a>.  Wang et al. propose a general framework for video translation in which target images are transformed to weights of a part of an image generation network <a href="#fn_wang_2019">[Wang et al. 2019]</a>. Their approach can transfer facial expressions as well as full-body poses. Note that these works solve problems that are different from mine because their source of movement is the driving video rather than a sequence of abstract parameters.</p>
+    <p><b>Animating human images.</b> Creating animation from a single or a few human images has been researched extensively by the graphics and vision communities, and much progress was made recently thanks to deep learning. These works typically seek to make the human in a given "target" image or video imitate the action of another human in a separate "driving" video. Chan et al. devise a pipeline to make the target person imitate the full-body dance moves of the driving video <a href="#fn_chan_2019">[Chan et al. 2019]</a>. It makes extensive use of neural pose estimation and requires a video of the target person in the training phase. Zakharov et al. train an embedder network to map one or several target images into a latent code, which is used to control a generator network to translates a facial landmark image so that it has the face of the target human <a href="#fn_zakharov_2019">[Zakarov et al. 2019]</a>.  Wang et al. propose a general framework for video translation in which target images are transformed to weights of a part of an image generation network <a href="#fn_wang_2019">[Wang et al. 2019]</a>. Their approach can transfer facial expressions as well as full-body poses. Note that these works solve problems that are different from mine because their source of movement is the driving video rather than a sequence of abstract parameters</p>
 
     <div class="footnotes">
         <ul>
@@ -3227,6 +3228,7 @@ The characters are virtual YouTubers affiliated with <a href="https://nijisanji.
     </table>
 
     <hr>
+
     <b>Update History</b>
 
     <ul>
@@ -3236,6 +3238,9 @@ The characters are virtual YouTubers affiliated with <a href="https://nijisanji.
 
         <li>2019/11/26: First publication.</li>
     </ul>
+
+    <hr>
+    <p align="right"><font size="1">Project <a href="https://ja.wikipedia.org/wiki/%E3%83%AA%E3%83%B3%E3%83%89%E3%82%A6">Rindou</a></font></p>    
 </div>
 
 <script type="text/javascript">
