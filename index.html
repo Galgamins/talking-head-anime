@@ -627,10 +627,11 @@ The characters are virtual YouTubers affiliated with <a href="https://nijisanji.
 
     <p>The face rotator consists of two subnetworks. The <i>two-algorithm rotator</i> rotates the character's face with two different algorithms, each with its own strength and weakness. To combine their strength, the <i>combiner</i> takes the two output images, blends them together with an alpha mask, and also retouches the image to improve quality.</p>    
 
+    <a name="two-algo-face-rotator">
     <h4>6.2.1 &nbsp; Two-Algorithm Rotator</h4>
 
     <p>
-        The architecture is depicted in Figure 6B and is specified in details in <a href="#two-algo-face-rotator">Appendix A.2</a>.
+        The architecture is depicted in Figure 6B and is specified in details in <a href="#two-algo-face-rotator-details">Appendix A.2</a>.
     </p>
 
     <p align="center">
@@ -2750,7 +2751,7 @@ The characters are virtual YouTubers affiliated with <a href="https://nijisanji.
         </ul>
     </div>
 
-    <h3>A.2 &nbsp; Two-Algorithm Face Rotator</h3><a name="two-algo-face-rotator"></a>
+    <h3>A.2 &nbsp; Two-Algorithm Face Rotator</h3><a name="two-algo-face-rotator-details"></a>
 
     <p>The two-algorithm face rotator is almost the same as the face morpher. There are two main differences. First, instead of taking components related to facial expression of the pose vector as input, it takes the components that control face rotation. Second, there is an extra output pathway corresponding to Zhou et al.'s algorithm.</p>
 
